@@ -8,12 +8,19 @@
 import SwiftUI
 import CoreData
 
+// Add this line
+
+
 struct ContentView: View {
     @State private var url: String = ""
     @State private var showQRCode: Bool = false
     @State private var showShortURL: Bool = false
     @State private var qrCodeImage: UIImage? = nil
     @State private var shortURL: String = ""
+    @State private var isValidating: Bool = false
+    @State private var validationError: String? = nil
+    
+    private let urlValidationService = URLValidationService()
     
     var body: some View {
         VStack(spacing: 20) {
@@ -86,13 +93,38 @@ struct ContentView: View {
     }
     
     func generateQRCode() {
-        // Implement QR code generation logic here
-        showQRCode = true
+        Task {
+            await validateAndProcess { [self] in
+                // Implement QR code generation logic here
+                showQRCode = true
+            }
+        }
     }
     
     func generateShortURL() {
-        // Implement short URL generation logic here
-        showShortURL = true
+        Task {
+            await validateAndProcess { [self] in
+                // Implement short URL generation logic here
+                showShortURL = true
+            }
+        }
+    }
+    
+    func validateAndProcess(action: @escaping () -> Void) async {
+        isValidating = true
+        validationError = nil
+        
+        let (isValid, isSafe) = await urlValidationService.validateURL(url)
+        
+        if !isValid {
+            validationError = "Invalid URL. Please enter a valid URL."
+        } else if !isSafe {
+            validationError = "This URL may be unsafe. Please try a different URL."
+        } else {
+            action()
+        }
+        
+        isValidating = false
     }
     
     func qrCodeView() -> some View {
