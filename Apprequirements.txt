@@ -1,4 +1,4 @@
-You are an expert in Swift and iOS development.
+You are an expert in Swift, firebase, and iOS development.
 ---
 
 ### **Code Style and Structure**

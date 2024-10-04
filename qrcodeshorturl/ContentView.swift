@@ -8,9 +8,6 @@
 import SwiftUI
 import CoreData
 
-// Add this line
-
-
 struct ContentView: View {
     @State private var url: String = ""
     @State private var showQRCode: Bool = false
@@ -20,6 +17,7 @@ struct ContentView: View {
     @State private var isValidating: Bool = false
     @State private var validationError: String? = nil
     
+    private let urlService = URLService.shared
     private let urlValidationService = URLValidationService()
     
     var body: some View {
@@ -41,7 +39,6 @@ struct ContentView: View {
         .padding()
     }
     
-    // We'll implement these views next
     func headerView() -> some View {
         VStack {
             Text("The best QR Code/Short")
@@ -65,66 +62,30 @@ struct ContentView: View {
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .autocapitalization(.none)
                 .disableAutocorrection(true)
+            if let error = validationError {
+                Text(error)
+                    .foregroundColor(.red)
+                    .font(.caption)
+            }
         }
     }
     
     func actionButtonsView() -> some View {
-        HStack(spacing: 20) {
-            Button(action: generateQRCode) {
-                Text("Get QR Code")
-                    .foregroundColor(.white)
-                    .padding()
-                    .background(Color.black)
-                    .cornerRadius(8)
+        HStack {
+            Button("Get QR Code") {
+                Task {
+                    await generateQRCode()
+                }
             }
+            .disabled(url.isEmpty || isValidating)
             
-            Button(action: generateShortURL) {
-                Text("Get Short URL")
-                    .foregroundColor(.black)
-                    .padding()
-                    .background(Color.white)
-                    .cornerRadius(8)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.black, lineWidth: 1)
-                    )
+            Button("Get Short URL") {
+                Task {
+                    await generateShortURL()
+                }
             }
+            .disabled(url.isEmpty || isValidating)
         }
-    }
-    
-    func generateQRCode() {
-        Task {
-            await validateAndProcess { [self] in
-                // Implement QR code generation logic here
-                showQRCode = true
-            }
-        }
-    }
-    
-    func generateShortURL() {
-        Task {
-            await validateAndProcess { [self] in
-                // Implement short URL generation logic here
-                showShortURL = true
-            }
-        }
-    }
-    
-    func validateAndProcess(action: @escaping () -> Void) async {
-        isValidating = true
-        validationError = nil
-        
-        let (isValid, isSafe) = await urlValidationService.validateURL(url)
-        
-        if !isValid {
-            validationError = "Invalid URL. Please enter a valid URL."
-        } else if !isSafe {
-            validationError = "This URL may be unsafe. Please try a different URL."
-        } else {
-            action()
-        }
-        
-        isValidating = false
     }
     
     func qrCodeView() -> some View {
@@ -202,6 +163,41 @@ struct ContentView: View {
         .shadow(radius: 5)
     }
     
+    func generateQRCode() async {
+        await validateAndProcess {
+            qrCodeImage = urlService.generateQRCode(for: url)
+            showQRCode = true
+        }
+    }
+    
+    func generateShortURL() async {
+        await validateAndProcess { [self] in
+            do {
+                shortURL = try await urlService.shortenURL(url)
+                showShortURL = true
+            } catch {
+                validationError = "Error shortening URL: \(error.localizedDescription)"
+            }
+        }
+    }
+    
+    func validateAndProcess(action: @escaping () async -> Void) async {
+        isValidating = true
+        validationError = nil
+        
+        let (isValid, isSafe) = await urlValidationService.validateURL(url)
+        
+        if !isValid {
+            validationError = "Invalid URL. Please enter a valid URL."
+        } else if !isSafe {
+            validationError = "This URL may be unsafe. Please try a different URL."
+        } else {
+            await action()
+        }
+        
+        isValidating = false
+    }
+    
     func clearButton() -> some View {
         Button("Clear") {
             url = ""
@@ -209,8 +205,15 @@ struct ContentView: View {
             showShortURL = false
             qrCodeImage = nil
             shortURL = ""
+            validationError = nil
         }
         .foregroundColor(.blue)
+    }
+}
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
     }
 }
 

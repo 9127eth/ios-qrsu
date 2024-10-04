@@ -9,6 +9,8 @@ import SwiftUI
 
 @main
 struct qrcodeshorturlApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
