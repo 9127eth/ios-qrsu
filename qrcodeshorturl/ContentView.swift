@@ -9,68 +9,176 @@ import SwiftUI
 import CoreData
 
 struct ContentView: View {
-    @Environment(\.managedObjectContext) private var viewContext
-
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Item.timestamp, ascending: true)],
-        animation: .default)
-    private var items: FetchedResults<Item>
-
+    @State private var url: String = ""
+    @State private var showQRCode: Bool = false
+    @State private var showShortURL: Bool = false
+    @State private var qrCodeImage: UIImage? = nil
+    @State private var shortURL: String = ""
+    
     var body: some View {
-        NavigationView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp!, formatter: itemFormatter)")
-                    } label: {
-                        Text(item.timestamp!, formatter: itemFormatter)
-                    }
-                }
-                .onDelete(perform: deleteItems)
+        VStack(spacing: 20) {
+            headerView()
+            urlInputView()
+            actionButtonsView()
+            
+            if showQRCode {
+                qrCodeView()
             }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
-                }
+            
+            if showShortURL {
+                shortURLView()
             }
-            Text("Select an item")
+            
+            clearButton()
+        }
+        .padding()
+    }
+    
+    // We'll implement these views next
+    func headerView() -> some View {
+        VStack {
+            Text("The best QR Code/Short")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+            Text("URL generator ever.")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+            Text("Generate a QR code and a short URL for any website.")
+                .font(.subheadline)
+                .foregroundColor(.gray)
+        }
+        .multilineTextAlignment(.center)
+    }
+    
+    func urlInputView() -> some View {
+        VStack(alignment: .leading) {
+            Text("Enter a URL")
+                .font(.headline)
+            TextField("https://example.com", text: $url)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .autocapitalization(.none)
+                .disableAutocorrection(true)
         }
     }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(context: viewContext)
-            newItem.timestamp = Date()
-
-            do {
-                try viewContext.save()
-            } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+    
+    func actionButtonsView() -> some View {
+        HStack(spacing: 20) {
+            Button(action: generateQRCode) {
+                Text("Get QR Code")
+                    .foregroundColor(.white)
+                    .padding()
+                    .background(Color.black)
+                    .cornerRadius(8)
+            }
+            
+            Button(action: generateShortURL) {
+                Text("Get Short URL")
+                    .foregroundColor(.black)
+                    .padding()
+                    .background(Color.white)
+                    .cornerRadius(8)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color.black, lineWidth: 1)
+                    )
             }
         }
     }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            offsets.map { items[$0] }.forEach(viewContext.delete)
-
-            do {
-                try viewContext.save()
-            } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+    
+    func generateQRCode() {
+        // Implement QR code generation logic here
+        showQRCode = true
+    }
+    
+    func generateShortURL() {
+        // Implement short URL generation logic here
+        showShortURL = true
+    }
+    
+    func qrCodeView() -> some View {
+        VStack {
+            if let qrImage = qrCodeImage {
+                Image(uiImage: qrImage)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 200, height: 200)
+            } else {
+                Text("QR Code")
+                    .frame(width: 200, height: 200)
+                    .background(Color.gray.opacity(0.2))
+            }
+            
+            HStack {
+                Picker("Format", selection: .constant("png")) {
+                    Text("PNG").tag("png")
+                    Text("JPEG").tag("jpeg")
+                    Text("SVG").tag("svg")
+                }
+                .pickerStyle(MenuPickerStyle())
+                
+                Toggle("no background", isOn: .constant(false))
+            }
+            
+            Button("Download") {
+                // Implement download logic
+            }
+            .padding(.vertical, 8)
+            .padding(.horizontal, 16)
+            .background(Color.blue)
+            .foregroundColor(.white)
+            .cornerRadius(8)
+        }
+        .padding()
+        .background(Color.white)
+        .cornerRadius(12)
+        .shadow(radius: 5)
+    }
+    
+    func shortURLView() -> some View {
+        VStack(alignment: .leading) {
+            Text("Short URL:")
+                .font(.headline)
+            
+            HStack {
+                Text(shortURL)
+                    .padding(8)
+                    .background(Color.gray.opacity(0.2))
+                    .cornerRadius(8)
+                
+                Button(action: {
+                    // Implement copy logic
+                }) {
+                    Text("Copy")
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 16)
+                        .background(Color.black)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                }
+                
+                Button(action: {
+                    // Implement QR code generation for short URL
+                }) {
+                    Image(systemName: "qrcode")
+                        .foregroundColor(.black)
+                }
             }
         }
+        .padding()
+        .background(Color.white)
+        .cornerRadius(12)
+        .shadow(radius: 5)
+    }
+    
+    func clearButton() -> some View {
+        Button("Clear") {
+            url = ""
+            showQRCode = false
+            showShortURL = false
+            qrCodeImage = nil
+            shortURL = ""
+        }
+        .foregroundColor(.blue)
     }
 }
 
