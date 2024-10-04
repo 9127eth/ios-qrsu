@@ -1,0 +1,577 @@
+You are an expert in Swift and iOS development.
+---
+
+### **Code Style and Structure**
+
+- **Write Clean, Concise Swift Code**:
+  - Strive for clarity and simplicity in your code.
+  - Use Swift's powerful language features effectively.
+  
+- **Follow Functional and Declarative Programming Patterns**:
+  - **Prefer Value Types**: Use structs and enums over classes when possible.
+  - **Immutability**: Favor `let` over `var` to define constants.
+  - **Higher-Order Functions**: Use `map`, `filter`, `reduce`, and `compactMap` for collection transformations.
+
+- **Avoid Imperative Code When Possible**:
+  - Minimize the use of mutable state and side effects.
+  - Use Swift's optional chaining and guard statements to handle optional values safely.
+
+- **Modularization and Code Reuse**:
+  - Break down your code into reusable components and extensions.
+  - Utilize protocols and protocol extensions to define shared interfaces.
+
+- **Descriptive Variable and Function Names**:
+  - Use clear, descriptive names that convey purpose.
+  - Include context in variable names (e.g., `isLoading`, `hasError`, `shouldFetchData`).
+
+- **File Organization**:
+  - **Structure Files Intuitively**:
+    - **Models**: Data structures and entities.
+    - **Views**: UI components (SwiftUI views or UIKit views).
+    - **ViewModels / Controllers**: Business logic and state management.
+    - **Helpers / Utilities**: Extensions, utility functions, and common code.
+    - **Resources**: Assets like images and localized strings.
+    - **Protocols and Type Definitions**: Protocols, enums, and typealiases.
+
+- **Project Structure**:
+  - Group related files using folders and groups in Xcode.
+  - Keep the project hierarchy clean to enhance navigability.
+
+---
+
+### **Naming Conventions**
+
+- **Camel Case for Variables and Functions**:
+  - Start with a lowercase letter, e.g., `isUserLoggedIn`, `fetchData()`.
+
+- **Pascal Case for Types and Protocols**:
+  - Start with an uppercase letter, e.g., `UserProfile`, `NetworkManager`, `Authenticatable`.
+
+- **Use Descriptive Names**:
+  - Avoid abbreviations unless they are well-known (e.g., `URL`, `ID`).
+  - Function names should be clear about their purpose and side effects.
+
+- **Enum Cases and Static Constants**:
+  - Use lowerCamelCase for enum cases, e.g., `case success`, `case failure`.
+  - Use upperCamelCase for static constants when part of a type.
+
+- **File Naming**:
+  - Match the file name with the type or extension it contains, e.g., `UserProfile.swift` contains the `UserProfile` struct.
+
+- **Avoid Prefixes**:
+  - Do not use prefixes like `NS` or `UI`; Swift's module system makes them unnecessary.
+
+---
+
+### **Swift Usage**
+
+- **Embrace Swift's Type Safety**:
+  - Utilize strong typing to catch errors at compile time.
+  - Use optionals (`?` and `!`) judiciously to handle the presence or absence of values.
+
+- **Prefer Structs and Enums over Classes**:
+  - Use structs for modeling data.
+  - Use enums for grouping related values and handling state.
+
+- **Protocol-Oriented Programming**:
+  - Define protocols to specify interfaces and use protocol extensions to provide default implementations.
+
+- **Avoid Using `Any` and `AnyObject`**:
+  - Be as specific as possible with types.
+
+- **Use Extensions for Code Organization**:
+  - Extend types to add functionality, keeping related code grouped together.
+
+- **Avoid Overusing Singletons**:
+  - Use dependency injection where possible to make code more testable.
+
+---
+
+### **Syntax and Formatting**
+
+- **Consistent Indentation and Spacing**:
+  - Use 4 spaces for indentation.
+  - Maintain consistent spacing around operators and after commas.
+
+- **Function and Closure Syntax**:
+  - Use trailing closure syntax when the last parameter is a closure.
+  - Specify parameter and return types explicitly.
+
+- **Simplify Conditionals and Control Flow**:
+  - Use `guard` statements for early exits and to reduce nested code.
+  - Use `if let` or `guard let` for optional unwrapping.
+
+- **Keep Methods Short and Focused**:
+  - Each function or method should perform a single task.
+  - Break down complex functions into smaller, reusable ones.
+
+- **Comments and Documentation**:
+  - Use `///` for documentation comments to generate documentation.
+  - Comment on why something is done if it's not immediately clear.
+
+- **Avoid Force Unwrapping and Force Casting**:
+  - Use safe unwrapping techniques to prevent runtime crashes.
+
+---
+
+### **Performance Optimization**
+
+- **Efficient Data Handling**:
+  - Use lazy properties for expensive initializations that may not be needed immediately.
+  - Use background threads for non-UI work to keep the UI responsive.
+
+- **Optimize Image Loading**:
+  - Use appropriate image formats like PNG or JPEG.
+  - Leverage caching mechanisms to avoid redundant network calls.
+
+- **Memory Management**:
+  - Be mindful of reference cycles; use `[weak self]` or `[unowned self]` in closures where appropriate.
+  - Use value types (structs) to reduce memory overhead.
+
+- **Leverage SwiftUI and Combine (if applicable)**:
+  - Use SwiftUI's `@State`, `@Binding`, and `@ObservedObject` for efficient state management.
+  - Use Combine's publishers and subscribers for reactive programming.
+
+- **Asynchronous Programming**:
+  - Utilize async/await patterns where available for cleaner asynchronous code.
+  - Avoid blocking the main thread.
+
+- **Networking**:
+  - Use efficient networking libraries like `URLSession` or third-party libraries like `Alamofire`.
+  - Implement proper error handling and retries for network requests.
+
+---
+
+### **Logging Rules**
+
+- **Purposeful Logging**:
+  - Log only what is necessary to debug issues.
+  - Avoid cluttering the console with excessive logs.
+
+- **Use Appropriate Log Levels**:
+  - **Debug**: Detailed information, typically of interest only when diagnosing problems.
+  - **Info**: Confirmation that things are working as expected.
+  - **Warning**: An indication that something unexpected happened, but the application is still functioning.
+  - **Error**: Serious issues that have caused operations to fail.
+
+- **Include Contextual Information**:
+  - Provide relevant details that can help identify the issue (e.g., function names, variable values).
+
+- **Avoid Logging Sensitive Information**:
+  - Do not log personal data, passwords, or any sensitive information.
+
+- **Logging Frameworks**:
+  - Consider using logging frameworks like `os.log` for advanced logging features and better performance.
+
+- **Review and Refine Logs**:
+  - Periodically audit your logs to ensure they provide value.
+  - Remove or adjust logs that are no longer helpful.
+
+---
+
+### **Exception and Error Handling**
+
+- **Use Swift's Error Handling Mechanisms**:
+  - Implement `do-catch` blocks for throwing functions.
+  - Define custom error types conforming to the `Error` protocol.
+
+- **Fail Gracefully**:
+  - Provide meaningful feedback to the user when errors occur.
+  - Avoid crashes by handling unexpected states.
+
+- **Validation**:
+  - Validate inputs and states before performing operations.
+  - Use assertions (`assert`, `precondition`) during development to catch issues early.
+
+---
+
+### **Code Documentation**
+
+- **Use Markup for Documentation Comments**:
+  - Write clear and concise documentation using Swift's markup syntax.
+  - Document public APIs and complex code logic.
+
+- **Keep Documentation Up to Date**:
+  - Update comments when code changes.
+  - Remove outdated comments to prevent confusion.
+
+---
+
+### **Accessibility and Internationalization**
+
+- **Accessibility**:
+  - Use accessibility labels and hints for UI elements.
+  - Ensure your app is usable with VoiceOver and other assistive technologies.
+
+- **Internationalization (i18n) and Localization (l10n)**:
+  - Use `NSLocalizedString` for user-facing text.
+  - Support right-to-left languages if applicable.
+
+---
+
+### **Security Best Practices**
+
+- **Secure Data Storage**:
+  - Store sensitive data in the Keychain.
+  - Avoid storing sensitive information in plain text.
+
+- **Network Security**:
+  - Use HTTPS for all network requests.
+  - Validate SSL certificates and implement certificate pinning if necessary.
+
+- **Input Validation**:
+  - Sanitize user input to prevent injection attacks.
+
+---
+
+### **Dependency Management**
+
+- **Use Swift Package Manager (SPM)**:
+  - Prefer SPM for adding third-party libraries.
+  - Keep dependencies up to date and minimal.
+
+- **Avoid Over-Reliance on External Libraries**:
+  - Use built-in frameworks when possible.
+  - Evaluate the necessity and security of each dependency.
+
+---
+
+### **Project Configuration**
+
+- **Use Configurations and Schemes**:
+  - Separate build configurations for Debug and Release.
+  - Use different schemes for testing, staging, and production if needed.
+
+- **Environment Variables and Secrets**:
+  - Do not hardcode API keys or secrets.
+  - Use configuration files or environment variables securely.
+
+---
+
+### **General Best Practices**
+
+- **Stay Updated with Swift Evolution**:
+  - Keep up with the latest Swift language features and best practices.
+
+- **Consistent Coding Style**:
+  - Use tools like SwiftLint to enforce coding standards.
+
+- **Performance Profiling**:
+  - Use Xcode Instruments to profile and optimize your app.
+
+- **User Experience**:
+  - Follow Apple's Human Interface Guidelines for UI/UX design.
+
+---
+Frontend - swift
+Backend - firestore
+version control - github
+
+UI
+Must have a dark mode option. 
+
+
+There must be a way for users to delete their accounts (post MVP)
+There must be a forgot password function implemented. (post MVP)
+Pop ups and confirmations should occur cleanly in the UI. 
+
+# QR Code Generator and URL Shortener App Requirements
+
+---
+
+## Project Overview
+
+Develop mobile application that serves as a QR code generator, URL shortener, and NFC tag writeraiming to compete with services like Bit.ly. The application will have two primary phases:
+
+1. **MVP (Minimum Viable Product):** Basic functionalities to generate QR codes and shorten URLs.
+2. **Post-MVP Enhancements:** User authentication, profiles, storage, advanced features, and potential monetization through paid services.
+
+---
+
+## Core Technologies
+
+- **Frontend:**
+  - **Web:** Next.js, React (already built mvp for this)
+  - **Mobile:** swift
+
+- **Backend:**
+  - Firebase
+
+- **Authentication:**
+  - Firebase Authentication (Post-MVP)
+
+- **Storage:**
+  - Firestore
+  - Firebase Storage (Post-MVP)
+
+- **Key Management:**
+  - Environment variables for app keys and secrets
+
+- **Payment Processing:**
+  - Stripe (Post-MVP)
+
+- **Deployment:**
+  - GitHub for version control
+  - xcode and swift for web deployment
+
+---
+
+## Functional Requirements
+
+### MVP Features Overview
+
+1. **URL Shortening:**
+   - Input long URLs and generate shortened versions.
+   - Provide a unique, short URL identifier. 
+
+2. **QR Code Generation:**
+   - Generate QR codes corresponding to the user input URLs.
+   - Allow users to download or share the QR codes.
+
+3. **User Interface:**
+   - Intuitive and responsive web interface.
+   - Mobile-friendly design for accessibility on various devices.
+
+Plan for qr code and short url generation. 
+	•	Frontend Web(Next.js on Vercel) mobile is switft:
+	•	Users submit URLs to be shortened.
+	•	Dynamic routing in Next.js handles redirections.
+   QR Code Generation: Consider using a library like qrcode for Node.js to generate QR codes server-side. This can be done in your API routes.
+Short Code Generation: Implement a method to generate unique short codes. You could use a combination of characters and numbers, ensuring uniqueness by checking against existing entries in your database.
+	•	API routes handle URL shortening, QR code generation, and database access.
+	•	Backend (Firestore and Firebase): Store the original URLs and short codes.
+	•	Firebase Analytics to track usage.
+
+Implement rule where if URL over 20 characters we will shorten it to create a more readable qr code. Users will have the option to undo it and use actual URL. 
+
+### Post-MVP Features
+
+5. **Link Management:**
+   - View a list of created short URLs and QR codes.
+   - Option to delete or regenerate short links and QR codes.
+
+
+3. **Basic Analytics:**
+   - Track the number of clicks/views for each shortened URL and QR code.
+
+
+1. **User Authentication & Profiles:**
+   - User registration and login using Firebase Authentication.
+   - User profiles to manage their URLs and QR codes.
+
+2. **Advanced Storage:**
+   - Store user data, including link history and analytics, using Firebase Storage.
+
+3. **Enhanced Analytics:**
+   - Detailed metrics such as geographic data, device types, and referral sources.
+
+4. **Customization Options:**
+   - Customizable QR code designs (colors, logos).
+   - Ability to edit short URLs after creation.
+
+5. **Payment Integration:**
+   - Implement Stripe for subscription-based or pay-per-use services.
+   - Manage billing and invoices for premium features.
+
+6. **Dashboard:**
+   - Comprehensive dashboard for users to manage their links, view analytics, and handle account settings.
+
+7. **API Access:**
+   - Provide API endpoints for users to integrate URL shortening and QR code generation into their own applications.
+
+8. **Security Enhancements:**
+   - Implement features like link expiration, password-protected links, and spam prevention.
+
+9. **Support & Feedback:**
+   - In-app support system and feedback mechanisms for users.
+
+10. **Notifications:**
+    - Email or in-app notifications for account activities, billing, and important updates.
+
+---
+
+## Technical Specifications
+
+### Frontend
+
+- **Web Application:**
+  - **Framework:** Next.js with React
+  - **Routing:** Utilize Next.js routing for navigation between pages.
+  - **State Management:** Use React Context or Redux for managing application state.
+  - **Styling:** CSS-in-JS (e.g., styled-components) or CSS frameworks like Tailwind CSS.
+
+- **Mobile Application:**
+  - **Framework:** React Native
+  - **Navigation:** React Navigation for handling screen transitions.
+  - **UI Components:** Reusable components for consistency across platforms.
+
+### Backend
+
+- **Platform:** Firebase
+  - **Database:** Firestore for storing URLs, user data, and analytics.
+  - **Functions:** Firebase Cloud Functions for handling backend logic like URL shortening, QR code generation, and analytics tracking.
+  - **Real-time Updates:** Utilize Firestore's real-time capabilities for instant updates on the frontend.
+
+### Authentication
+
+- **Service:** Firebase Authentication
+  - **Methods:** Email/password, Google, and other OAuth providers.
+  - **Post-MVP Integration:** Secure routes and data access based on user authentication status.
+
+### Storage
+
+- **Service:** Firebase Storage
+  - **Use Cases:** Store user-generated content such as custom QR code images or exported data.
+  - **Access Control:** Secure access to storage based on user permissions.
+
+### Key Management
+
+- **Environment Variables:**
+  - Store all sensitive keys and secrets in environment variables.
+  - Utilize `.env` files for local development and secure storage solutions for production.
+
+### Payment Processing
+
+- **Service:** Stripe
+  - **Integration Points:** Subscription plans, one-time payments, and billing management.
+  - **Security:** Ensure PCI compliance and secure handling of payment data.
+
+### Deployment
+
+- **Version Control:** GitHub
+  - **Repository Structure:** Separate repositories for web and mobile applications if necessary.
+  - **Branching Strategy:** Implement a branching strategy (e.g., Gitflow) for organized development.
+
+- **Web Deployment:** Vercel
+  - **CI/CD:** Set up continuous integration and deployment pipelines with GitHub and Vercel.
+  - **Environment Management:** Configure separate environments for development, staging, and production.
+
+- **Mobile Deployment:**
+  - **Platforms:** App Store (iOS) and Google Play Store (Android)
+  - **CI/CD:** Use services like GitHub Actions or Bitrise for automated builds and deployments.
+
+---
+
+## Non-Functional Requirements
+
+### Performance
+
+- **Load Time:** Pages should load within 2 seconds under standard network conditions.
+- **Scalability:** Design the system to handle a growing number of users and requests without significant performance degradation.
+- **Responsiveness:** Ensure the application is responsive and works seamlessly across various devices and screen sizes.
+
+### Security
+
+- **Data Protection:** Encrypt sensitive data both in transit and at rest.
+- **Authentication Security:** Implement strong password policies and protect against common vulnerabilities like SQL injection, XSS, and CSRF.
+- **Access Control:** Ensure users can only access and manage their own data.
+
+### Scalability
+
+- **Backend:** Utilize Firebase's scalable infrastructure to handle increased traffic and data storage needs.
+- **Frontend:** Optimize code to ensure quick rendering and minimal load on client devices.
+
+### Usability
+
+- **User Experience:** Design an intuitive and user-friendly interface with clear navigation.
+- **Accessibility:** Adhere to accessibility standards (e.g., WCAG) to make the application usable for individuals with disabilities.
+- **Documentation:** Provide clear documentation and tooltips to assist users in understanding features.
+
+---
+
+## API Requirements
+
+1. **URL Shortening API:**
+   - **Endpoint:** `/api/shorten`
+   - **Method:** POST
+   - **Request Body:** `{ "longUrl": "https://example.com" }`
+   - **Response:** `{ "shortUrl": "https://short.ly/abcd" }`
+
+2. **QR Code Generation API:**
+   - **Endpoint:** `/api/qrcode`
+   - **Method:** POST
+   - **Request Body:** `{ "url": "https://short.ly/abcd" }`
+   - **Response:** `{ "qrCodeImage": "base64string" }`
+
+3. **Analytics API (post MVP):** 
+   - **Endpoint:** `/api/analytics/:shortUrl`
+   - **Method:** GET
+   - **Response:** `{ "clicks": 100, "uniqueVisitors": 80, ... }`
+
+4. **User Management APIs (Post-MVP):**
+   - **User Registration, Login, Profile Management**
+
+5. **Payment APIs (Post-MVP):**
+   - **Subscription Management, Payment Processing**
+
+**API Security:**
+- Implement authentication tokens (e.g., JWT) for protected endpoints.
+- Rate limiting to prevent abuse.
+
+---
+
+## User Interface & Design
+
+1. **Landing Page:**
+   - Clear value proposition.
+   - Input field for URL shortening.
+   - Call-to-action buttons for generating QR codes.
+
+2. **Dashboard (Post-MVP):**
+   - Overview of user’s shortened URLs and QR codes.
+   - Analytics summaries.
+   - Navigation to account settings and billing.
+
+3. **URL Management(Post-MVP):**
+   - List view of all shortened URLs with options to edit, delete, and view analytics.
+   - Search and filter capabilities.
+
+4. **QR Code Management (Post MVP):**
+   - Gallery view of generated QR codes.
+   - Options to download, share, or customize QR codes.
+
+5. **Authentication Pages (Post-MVP):**
+   - Sign Up, Login, Password Reset.
+
+6. **Billing Page (Post-MVP):**
+   - Subscription plans.
+   - Payment history and invoice downloads.
+
+7. **Responsive Design:**
+   - Ensure all pages are mobile-friendly and adapt to various screen sizes.
+
+**Design Considerations:**
+- Consistent color scheme and branding.
+- Intuitive navigation and user flow.
+- Accessibility features like proper contrast, keyboard navigation, and screen reader support.
+
+---
+
+---
+
+## Additional Considerations
+
+1. **Scalability:**
+   - Design the architecture to accommodate future growth in users and data.
+   - Optimize database queries and backend functions for efficiency.
+make sure URLs are unique and never create duplicates. 
+
+2. **Localization:**
+   - Plan for supporting multiple languages to reach a broader audience.
+
+3. **Compliance:**
+   - Ensure the application complies with relevant data protection regulations (e.g., GDPR, CCPA).
+
+4. **Backup & Recovery:**
+   - Implement data backup strategies to prevent data loss.
+   - Plan for disaster recovery in case of system failures.
+
+5. **Monitoring & Analytics:**
+   - Use tools like Google Analytics and Firebase Analytics to monitor user behavior and application performance.
+
+6. **Documentation:**
+   - Provide comprehensive documentation for developers, including API documentation, setup guides, and contribution guidelines.
+
+7. **Support & Maintenance:**
+   - Establish a system for handling user support requests and technical issues.
+   - Schedule regular maintenance updates to keep the application secure and up-to-date.

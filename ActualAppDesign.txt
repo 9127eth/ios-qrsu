@@ -1,0 +1,251 @@
+# QR Code and URL Shortener App Implementation Guide
+
+Below was created using next.js, you need to convert this to swift.
+
+*Last Updated: October 3, 2023*
+
+## Table of Contents
+
+1. [App Overview](#app-overview)
+2. [Features](#features)
+3. [Technology Stack](#technology-stack)
+4. [API Endpoints](#api-endpoints)
+5. [Data Flow](#data-flow)
+6. [Component Structure](#component-structure)
+7. [UI/UX Design](#uiux-design)
+8. [Styling and Fonts](#styling-and-fonts)
+9. [Layout Details](#layout-details)
+10. [Additional Notes](#additional-notes)
+11. [Notes for the Swift Developer](#notes-for-the-swift-developer)
+
+## App Overview
+
+The QR Code and URL Shortener app allows users to:
+
+- Generate QR codes for any given URL.
+- Shorten long URLs into shorter, more manageable links.
+
+The web app is built using Next.js and React, with a backend powered by Firebase Firestore. The app is deployed on Vercel and uses Tailwind CSS for styling.
+
+## Features
+
+1. QR Code Generation
+   - Users can input a URL and generate a QR code.
+   - Options to customize the QR code:
+     - File type: PNG, JPEG, SVG.
+     - Background: With or without transparency.
+
+2. URL Shortening
+   - Users can shorten long URLs.
+   - The shortened URLs are unique and redirect to the original URL.
+   - Short codes are 5-character alphanumeric strings.
+
+3. Safety Checks
+   - URLs are checked against Google's Web Risk API to ensure they are safe before processing.
+   - Unsafe URLs are rejected with an appropriate error message.
+
+4. Rate Limiting
+   - API calls are rate-limited to prevent abuse.
+   - Implemented using the `express-rate-limit` library.
+
+5. Responsive Design
+   - The app is responsive and works across various devices and screen sizes.
+
+6. Theme Toggle
+   - Users can switch between light and dark modes.
+
+7. Error Handling
+   - User-friendly error messages are displayed for invalid URLs or other issues.
+
+8. Analytics
+   - Google Analytics (gtag.js) is integrated to track user interactions.
+
+## Technology Stack
+
+- Frontend:
+  - Next.js (React framework)
+  - Tailwind CSS for styling
+  - Shadcn UI components
+  - Radix UI for accessible components
+- Backend:
+  - Firebase Firestore (NoSQL database)
+  - Firebase Admin SDK
+- Utilities:
+  - QR Code Generation: `qrcode` and `qrcode-svg` Node.js libraries
+  - URL Validation: `validator` library
+- Security:
+  - Safety Checks: Google's Web Risk API
+- Icons:
+  - Lucide React icons
+- Deployment:
+  - Vercel for hosting
+- State Management:
+  - React Hooks and Context API
+
+## API Endpoints
+
+1. URL Shortening API
+   - Endpoint: `/api/shorten`
+   - Method: POST
+   - Request Body: `{ "longUrl": "https://example.com" }`
+   - Response: `{ "isSafe": true, "shortUrl": "https://qrsu.io/abcde" }`
+
+2. QR Code Generation API
+   - Endpoint: `/api/qrcode`
+   - Method: POST
+   - Request Body: `{ "url": "https://example.com" }`
+   - Response: Contains QR code images in various formats
+
+3. URL Redirect
+   - Endpoint: `/{shortCode}`
+   - Method: GET
+   - Functionality: Redirects to the original URL
+
+4. Rate Limiting Middleware
+   - Applied to API endpoints to limit the number of requests per IP.
+
+## Data Flow
+
+1. User Input
+2. URL Validation
+3. Safety Check
+4. QR Code Generation
+5. URL Shortening
+6. Displaying Results
+7. Redirection
+
+## Component Structure
+
+1. Main Components
+   - `app/page.tsx`
+   - `components/QRCodeGenerator.tsx`
+   - `components/ThemeToggle.tsx`
+   - Various UI components in `components/ui`
+
+2. API Routes
+   - `pages/api/shorten.ts`
+   - `pages/api/qrcode.ts`
+
+3. Utility Files
+   - `lib/firebaseAdmin.ts`
+   - `lib/firebaseConfig.ts`
+   - `lib/rateLimit.ts`
+
+## UI/UX Design
+
+- Layout Overview
+- User Interactions
+- Results Display
+- Theme Toggle
+- Error Handling
+
+## Styling and Fonts
+
+- Tailwind CSS
+- Font Family: 'Inter'
+- Color scheme for light and dark modes
+
+## Layout Details
+
+- Responsive Design
+- Header, Main Content, and Footer structure
+
+## Additional Notes
+
+- URL Validation
+- Web Risk API Integration
+- Rate Limiting
+- Environment Variables
+- Analytics
+- Error Handling and Logging
+
+## Notes for the Swift Developer
+
+- Objective: Recreate the app's functionality in Swift for iOS
+- APIs: Use the same endpoints
+- UI Components: Recreate using UIKit or SwiftUI
+- Styling: Match the web app's design
+- Validation: Implement URL validation
+- Additional Features: Consider rate limiting, analytics, and security
+- Error Handling: Provide user-friendly error messages
+
+---
+
+For detailed implementation instructions and code snippets, please refer to the full documentation.
+
+this was my global CSS
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 45%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+
+  .p-4 {
+    padding: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .p-4 {
+      padding: 0;
+    }
+  }
+}
