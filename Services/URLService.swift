@@ -73,6 +73,42 @@ class URLService {
         return outputImage
     }
     
+    func generateSVGQRCode(for url: String, size: CGFloat) -> String? {
+        guard let filter = CIFilter(name: "CIQRCodeGenerator") else { return nil }
+        let data = url.data(using: .ascii, allowLossyConversion: false)
+        filter.setValue(data, forKey: "inputMessage")
+        
+        guard let ciImage = filter.outputImage else { return nil }
+        
+        let context = CIContext()
+        guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else { return nil }
+        
+        let svgSize = Int(size)
+        let scale = svgSize / Int(ciImage.extent.width)
+        
+        var svg = """
+        <svg width="\(svgSize)" height="\(svgSize)" viewBox="0 0 \(svgSize) \(svgSize)" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100%" height="100%" fill="white"/>
+        """
+        
+        for y in 0..<Int(ciImage.extent.height) {
+            for x in 0..<Int(ciImage.extent.width) {
+                let pixelData = cgImage.dataProvider!.data!
+                let data: UnsafePointer<UInt8> = CFDataGetBytePtr(pixelData)
+                let pixelInfo: Int = ((Int(cgImage.width) * y) + x) * 4
+                
+                if data[pixelInfo] == 0 {
+                    let rectX = x * scale
+                    let rectY = y * scale
+                    svg += "<rect x='\(rectX)' y='\(rectY)' width='\(scale)' height='\(scale)' fill='black'/>"
+                }
+            }
+        }
+        
+        svg += "</svg>"
+        return svg
+    }
+    
     private func generateShortCode() -> String {
         let characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
         return String((0..<5).map { _ in characters.randomElement()! })

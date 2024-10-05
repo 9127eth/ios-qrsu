@@ -8,6 +8,7 @@
 import SwiftUI
 import CoreData
 import UIKit
+import WebKit
 
 struct ContentView: View {
     @State private var url: String = ""
@@ -21,6 +22,7 @@ struct ContentView: View {
     @State private var isCopied: Bool = false
     @State private var selectedFormat: String = "png"
     @State private var transparentBackground: Bool = false
+    @State private var svgData: String? = nil
     
     private let urlService = URLService.shared
     private let urlValidationService = URLValidationService()
@@ -270,10 +272,40 @@ struct ContentView: View {
     }
     
     func generateQRCode() async {
-        await validateAndProcess {
-            let formattedURL = url.lowercased().hasPrefix("http") ? url : "https://" + url
-            qrCodeImage = urlService.generateQRCode(for: formattedURL, size: CGSize(width: 1024, height: 1024), format: selectedFormat, transparent: transparentBackground)
+        isValidating = true
+        defer { isValidating = false }
+        
+        let urlWithScheme = url.lowercased().hasPrefix("http://") || url.lowercased().hasPrefix("https://") ? url : "https://" + url
+        
+        do {
+            let (isValid, isSafe, hasValidExtension) = try await urlValidationService.validateURL(urlWithScheme)
+            if !isValid {
+                validationError = "Invalid URL"
+                return
+            }
+            if !isSafe {
+                validationError = "URL may not be safe"
+                return
+            }
+            if !hasValidExtension {
+                showInvalidExtensionAlert = true
+                return
+            }
+            
+            // Always generate PNG for display
+            qrCodeImage = urlService.generateQRCode(for: urlWithScheme, size: CGSize(width: 200, height: 200), format: "png", transparent: transparentBackground)
+            
+            // Generate SVG data if selected
+            if selectedFormat == "svg" {
+                svgData = urlService.generateSVGQRCode(for: urlWithScheme, size: 200)
+            } else {
+                svgData = nil
+            }
+            
             showQRCode = true
+            validationError = nil
+        } catch {
+            validationError = "Error generating QR code: \(error.localizedDescription)"
         }
     }
     
@@ -323,39 +355,22 @@ struct ContentView: View {
     }
     
     func shareQRCode() {
-        guard let qrImage = qrCodeImage else { return }
+        var itemsToShare: [Any] = []
         
-        var imageToShare: UIImage
-        var fileExtension: String
-        
-        if selectedFormat.lowercased() == "jpeg" {
-            // For JPEG, flatten against a white background
-            UIGraphicsBeginImageContextWithOptions(qrImage.size, true, qrImage.scale)
-            UIColor.white.set()
-            UIRectFill(CGRect(origin: .zero, size: qrImage.size))
-            qrImage.draw(in: CGRect(origin: .zero, size: qrImage.size))
-            imageToShare = UIGraphicsGetImageFromCurrentImageContext() ?? qrImage
-            UIGraphicsEndImageContext()
-            fileExtension = "jpg"
-        } else {
-            // For PNG and other formats, use the image as-is
-            imageToShare = qrImage
-            fileExtension = "png"
+        if selectedFormat == "svg", let svgData = svgData {
+            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("qrcode.svg")
+            do {
+                try svgData.write(to: tempURL, atomically: true, encoding: .utf8)
+                itemsToShare.append(tempURL)
+            } catch {
+                print("Error saving SVG file: \(error)")
+            }
+        } else if let image = qrCodeImage {
+            itemsToShare.append(image)
         }
         
-        // Create a temporary file URL for the image
-        let temporaryDirectory = FileManager.default.temporaryDirectory
-        let fileName = "QRCode.\(fileExtension)"
-        let fileURL = temporaryDirectory.appendingPathComponent(fileName)
-        
-        // Write the image data to the file
-        if let imageData = fileExtension == "jpg" ? imageToShare.jpegData(compressionQuality: 1.0) : imageToShare.pngData() {
-            try? imageData.write(to: fileURL)
-            
-            // Share the file URL
-            let activityViewController = UIActivityViewController(activityItems: [fileURL], applicationActivities: nil)
-            UIApplication.shared.windows.first?.rootViewController?.present(activityViewController, animated: true, completion: nil)
-        }
+        let activityViewController = UIActivityViewController(activityItems: itemsToShare, applicationActivities: nil)
+        UIApplication.shared.windows.first?.rootViewController?.present(activityViewController, animated: true, completion: nil)
     }
 }
 
@@ -386,5 +401,28 @@ extension View {
             placeholder().opacity(shouldShow ? 1 : 0)
             self
         }
+    }
+}
+
+struct SVGView: UIViewRepresentable {
+    let svgString: String
+    
+    func makeUIView(context: Context) -> WKWebView {
+        let webView = WKWebView()
+        webView.isOpaque = false
+        webView.backgroundColor = .clear
+        webView.scrollView.isScrollEnabled = false
+        return webView
+    }
+    
+    func updateUIView(_ uiView: WKWebView, context: Context) {
+        let htmlString = """
+        <html>
+        <body style="margin: 0; padding: 0;">
+            \(svgString)
+        </body>
+        </html>
+        """
+        uiView.loadHTMLString(htmlString, baseURL: nil)
     }
 }
