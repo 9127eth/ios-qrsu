@@ -202,7 +202,7 @@ struct ContentView: View {
                         Text("SVG").tag("svg")
                     }
                     .pickerStyle(SegmentedPickerStyle())
-                    .onChange(of: selectedFormat) { newValue in
+                    .onChange(of: selectedFormat) { oldValue, newValue in
                         if newValue == "jpeg" {
                             transparentBackground = false
                         }
@@ -219,7 +219,7 @@ struct ContentView: View {
                 }
                 .toggleStyle(SwitchToggleStyle(tint: .blue))
                 .disabled(selectedFormat == "jpeg")
-                .onChange(of: transparentBackground) { newValue in
+                .onChange(of: transparentBackground) { oldValue, newValue in
                     if newValue && selectedFormat == "jpeg" {
                         selectedFormat = "png"
                     }
@@ -311,36 +311,32 @@ struct ContentView: View {
         
         let urlWithScheme = url.lowercased().hasPrefix("http://") || url.lowercased().hasPrefix("https://") ? url : "https://" + url
         
-        do {
-            let (isValid, isSafe, hasValidExtension) = try await urlValidationService.validateURL(urlWithScheme)
-            if !isValid {
-                validationError = "Invalid URL"
-                return
-            }
-            if !isSafe {
-                validationError = "URL may not be safe"
-                return
-            }
-            if !hasValidExtension {
-                showInvalidExtensionAlert = true
-                return
-            }
-            
-            // Always generate PNG for display
-            qrCodeImage = urlService.generateQRCode(for: urlWithScheme, size: CGSize(width: 200, height: 200), format: "png", transparent: transparentBackground)
-            
-            // Generate SVG data if selected
-            if selectedFormat == "svg" {
-                svgData = urlService.generateSVGQRCode(for: urlWithScheme, size: 200)
-            } else {
-                svgData = nil
-            }
-            
-            showQRCode = true
-            validationError = nil
-        } catch {
-            validationError = "Error generating QR code: \(error.localizedDescription)"
+        let (isValid, isSafe, hasValidExtension) = await urlValidationService.validateURL(urlWithScheme)
+        if !isValid {
+            validationError = "Invalid URL"
+            return
         }
+        if !isSafe {
+            validationError = "URL may not be safe"
+            return
+        }
+        if !hasValidExtension {
+            showInvalidExtensionAlert = true
+            return
+        }
+        
+        // Always generate PNG for display
+        qrCodeImage = urlService.generateQRCode(for: urlWithScheme, size: CGSize(width: 200, height: 200), format: "png", transparent: transparentBackground)
+        
+        // Generate SVG data if selected
+        if selectedFormat == "svg" {
+            svgData = urlService.generateSVGQRCode(for: urlWithScheme, size: 200)
+        } else {
+            svgData = nil
+        }
+        
+        showQRCode = true
+        validationError = nil
     }
     
     func generateShortURL() async {
@@ -404,7 +400,11 @@ struct ContentView: View {
         }
         
         let activityViewController = UIActivityViewController(activityItems: itemsToShare, applicationActivities: nil)
-        UIApplication.shared.windows.first?.rootViewController?.present(activityViewController, animated: true, completion: nil)
+        
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let window = windowScene.windows.first {
+            window.rootViewController?.present(activityViewController, animated: true, completion: nil)
+        }
     }
     
     func saveQRCodeToPhotos() {
