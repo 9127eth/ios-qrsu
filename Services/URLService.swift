@@ -12,7 +12,7 @@ import CoreImage.CIFilterBuiltins
 class URLService {
     static let shared = URLService()
     private let db = Firestore.firestore()
-    private let shortURLDomain: String
+    let shortURLDomain: String
     
     init() {
         self.shortURLDomain = ProcessInfo.processInfo.environment["SHORT_URL_DOMAIN"] ?? "qrsu.io"

@@ -260,7 +260,7 @@ struct ContentView: View {
             Text("Short URL:")
                 .font(.headline)
 
-            HStack {
+            HStack(spacing: 10) {
                 Text(shortURL)
                     .padding(8)
                     .background(Color.white)
@@ -279,9 +279,23 @@ struct ContentView: View {
                     }
                     .padding(.vertical, 8)
                     .padding(.horizontal, 16)
+                    .frame(height: 36) // Set a fixed height
                     .background(Color.black)
                     .foregroundColor(.white)
                     .cornerRadius(8)
+                }
+
+                Button(action: {
+                    generateQRCodeForShortURL()
+                }) {
+                    Image(systemName: "qrcode")
+                        .foregroundColor(.black)
+                        .frame(width: 36, height: 36) // Make it square and match the height of the share button
+                        .background(Color.white)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.gray, lineWidth: 1)
+                        )
                 }
             }
         }
@@ -387,6 +401,11 @@ struct ContentView: View {
 
         showQRCode = true
         validationError = nil
+        
+        // If the URL is a short URL, update the url state
+        if urlString.starts(with: "https://\(urlService.shortURLDomain)") {
+            url = urlString
+        }
     }
 
     func generateShortURL() async {
@@ -508,6 +527,13 @@ struct ContentView: View {
            let window = windowScene.windows.first,
            let rootViewController = window.rootViewController {
             rootViewController.present(activityViewController, animated: true, completion: nil)
+        }
+    }
+
+    func generateQRCodeForShortURL() {
+        Task {
+            await generateQRCodeImage(for: shortURL)
+            showQRCode = true
         }
     }
 }
