@@ -144,12 +144,13 @@ struct ContentView: View {
         VStack {
             if let qrImage = qrCodeImage {
                 Image(uiImage: qrImage)
+                    .interpolation(.none)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 200, height: 200)
+                    .frame(width: 193, height: 193)
             } else {
                 Text("QR Code")
-                    .frame(width: 200, height: 200)
+                    .frame(width: 193, height: 193)
                     .background(Color.gray.opacity(0.2))
             }
             
@@ -191,8 +192,12 @@ struct ContentView: View {
             HStack {
                 Text(shortURL)
                     .padding(8)
-                    .background(Color.gray.opacity(0.2))
+                    .background(Color.white) // Changed from Color.gray.opacity(0.2) to Color.white
                     .cornerRadius(8)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color.gray, lineWidth: 1)
+                    )
                 
                 Button(action: {
                     // Implement copy logic
@@ -222,7 +227,7 @@ struct ContentView: View {
     func generateQRCode() async {
         await validateAndProcess {
             let formattedURL = url.lowercased().hasPrefix("http") ? url : "https://" + url
-            qrCodeImage = urlService.generateQRCode(for: formattedURL)
+            qrCodeImage = urlService.generateQRCode(for: formattedURL, size: CGSize(width: 1024, height: 1024))
             showQRCode = true
         }
     }

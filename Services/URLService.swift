@@ -30,19 +30,25 @@ class URLService {
         return "https://\(shortURLDomain)/\(shortCode)"
     }
     
-    func generateQRCode(for url: String) -> UIImage? {
+    func generateQRCode(for url: String, size: CGSize = CGSize(width: 1024, height: 1024)) -> UIImage? {
+        guard let data = url.data(using: .utf8) else { return nil }
+        
         let context = CIContext()
         let filter = CIFilter.qrCodeGenerator()
         
-        filter.message = Data(url.utf8)
+        filter.setValue(data, forKey: "inputMessage")
+        filter.setValue("H", forKey: "inputCorrectionLevel") // Highest error correction
         
-        if let outputImage = filter.outputImage {
-            if let cgimg = context.createCGImage(outputImage, from: outputImage.extent) {
-                return UIImage(cgImage: cgimg)
-            }
-        }
+        guard let outputImage = filter.outputImage else { return nil }
         
-        return nil
+        // Scale the image to the full size
+        let fullSizeImage = outputImage.transformed(by: CGAffineTransform(scaleX: size.width / outputImage.extent.width,
+                                                                          y: size.height / outputImage.extent.height))
+        
+        // Create full-size UIImage
+        guard let cgImage = context.createCGImage(fullSizeImage, from: fullSizeImage.extent) else { return nil }
+        
+        return UIImage(cgImage: cgImage)
     }
     
     private func generateShortCode() -> String {
