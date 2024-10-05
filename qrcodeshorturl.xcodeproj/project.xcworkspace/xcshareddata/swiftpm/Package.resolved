@@ -1,5 +1,5 @@
 {
-  "originHash" : "a1569f9895aa2be8e24832f98525d5da4eb90b5d158a82691c15b47eb72a13d7",
+  "originHash" : "6047ab50c3ac417ec0fa00120cadac06d8153ac601c8caf1e83b28a3fad4f1ef",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -116,6 +116,15 @@
       "state" : {
         "revision" : "ebc7251dd5b37f627c93698e4374084d98409633",
         "version" : "1.28.2"
+      }
+    },
+    {
+      "identity" : "swiftdomainparser",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Dashlane/SwiftDomainParser.git",
+      "state" : {
+        "revision" : "ac1df3211011ad44c20457412eeb45beb318f847",
+        "version" : "1.1.0"
       }
     }
   ],

@@ -1,13 +1,16 @@
 import Foundation
+import DomainParser
 
 class URLValidationService {
     private let webRiskAPIKey: String
-    
+    private let domainParser: DomainParser
+
     init() {
         guard let apiKey = ProcessInfo.processInfo.environment["GOOGLE_WEB_RISK_API_KEY"] else {
             fatalError("Missing Web Risk API key in environment variables")
         }
         self.webRiskAPIKey = apiKey
+        self.domainParser = try! DomainParser()
     }
     
     func validateURL(_ url: String) async -> (isValid: Bool, isSafe: Bool, hasValidExtension: Bool) {
@@ -23,10 +26,10 @@ class URLValidationService {
         }
         
         let hasValidExtension = isValidDomainExtension(urlWithScheme)
-        
+
         // If the URL is valid, check its safety
         let (_, isSafe) = await checkURLSafety(urlWithScheme)
-        
+
         return (true, isSafe, hasValidExtension)
     }
     
@@ -58,18 +61,15 @@ class URLValidationService {
     }
     
     func isValidDomainExtension(_ url: String) -> Bool {
-        let validExtensions = ["com", "org", "net", "edu", "gov", "io", "co", "app", "dev", "ai", "me", "info", "biz", "tv"]
-        
         guard let host = URL(string: url)?.host else {
             return false
         }
-        
-        let components = host.components(separatedBy: ".")
-        guard let topLevelDomain = components.last else {
-            return false
+
+        let parsed = domainParser.parse(host: host)
+        if let publicSuffix = parsed?.publicSuffix {
+            return !publicSuffix.isEmpty
         }
-        
-        return validExtensions.contains(topLevelDomain.lowercased())
+        return false
     }
 }
 

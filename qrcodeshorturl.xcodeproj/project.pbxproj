@@ -24,6 +24,7 @@
 		028F70B72CB080B400D8BE29 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 028F70B62CB080B400D8BE29 /* GoogleService-Info.plist */; };
 		028F70B82CB080B400D8BE29 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 028F70B62CB080B400D8BE29 /* GoogleService-Info.plist */; };
 		028F70B92CB080B400D8BE29 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 028F70B62CB080B400D8BE29 /* GoogleService-Info.plist */; };
+		028F710C2CB0D99100D8BE29 /* DomainParser in Frameworks */ = {isa = PBXBuildFile; productRef = 028F710B2CB0D99100D8BE29 /* DomainParser */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -81,6 +82,7 @@
 				028F70AC2CB0741F00D8BE29 /* FirebaseAppCheck in Frameworks */,
 				028F70B02CB0741F00D8BE29 /* FirebaseFirestore in Frameworks */,
 				028F70AE2CB0741F00D8BE29 /* FirebaseAuth in Frameworks */,
+				028F710C2CB0D99100D8BE29 /* DomainParser in Frameworks */,
 				028F70B22CB0741F00D8BE29 /* FirebaseStorage in Frameworks */,
 				028F70AA2CB0741F00D8BE29 /* FirebaseAnalytics in Frameworks */,
 			);
@@ -194,6 +196,7 @@
 				028F70AD2CB0741F00D8BE29 /* FirebaseAuth */,
 				028F70AF2CB0741F00D8BE29 /* FirebaseFirestore */,
 				028F70B12CB0741F00D8BE29 /* FirebaseStorage */,
+				028F710B2CB0D99100D8BE29 /* DomainParser */,
 			);
 			productName = qrcodeshorturl;
 			productReference = 028F704C2CAFAB9600D8BE29 /* qrcodeshorturl.app */;
@@ -279,6 +282,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				028F70A82CB0741F00D8BE29 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				028F710A2CB0D99100D8BE29 /* XCRemoteSwiftPackageReference "SwiftDomainParser" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 028F704D2CAFAB9600D8BE29 /* Products */;
@@ -661,6 +665,14 @@
 				minimumVersion = 11.3.0;
 			};
 		};
+		028F710A2CB0D99100D8BE29 /* XCRemoteSwiftPackageReference "SwiftDomainParser" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Dashlane/SwiftDomainParser.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -688,6 +700,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 028F70A82CB0741F00D8BE29 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseStorage;
+		};
+		028F710B2CB0D99100D8BE29 /* DomainParser */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 028F710A2CB0D99100D8BE29 /* XCRemoteSwiftPackageReference "SwiftDomainParser" */;
+			productName = DomainParser;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

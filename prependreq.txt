@@ -1,10 +1,5 @@
 I want to remove the requirement for the user to input https:// as a rule for url validation.
 
-for urls
-
-we dont actually need to check if the url starts with http.
-My web code is set up where the rerouting address is set to https.
-
 
 for QR codes, 
 we should prepend https:// to the URL if the user doesnnt input it.
