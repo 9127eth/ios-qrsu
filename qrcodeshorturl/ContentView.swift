@@ -16,6 +16,7 @@ struct ContentView: View {
     @State private var shortURL: String = ""
     @State private var isValidating: Bool = false
     @State private var validationError: String? = nil
+    @State private var showInvalidExtensionAlert = false
     
     private let urlService = URLService.shared
     private let urlValidationService = URLValidationService()
@@ -37,6 +38,16 @@ struct ContentView: View {
             clearButton()
         }
         .padding()
+        .alert("Invalid Domain Extension", isPresented: $showInvalidExtensionAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Proceed Anyway") {
+                Task {
+                    await generateQRCode()
+                }
+            }
+        } message: {
+            Text("The domain extension you entered is not recognized. Do you want to proceed anyway?")
+        }
     }
     
     func headerView() -> some View {
@@ -185,12 +196,17 @@ struct ContentView: View {
         isValidating = true
         validationError = nil
         
-        let (isValid, isSafe) = await urlValidationService.validateURL(url)
+        let (isValid, isSafe, hasValidExtension) = await urlValidationService.validateURL(url)
         
         if !isValid {
             validationError = "Invalid URL. Please enter a valid URL."
         } else if !isSafe {
             validationError = "This URL may be unsafe. Please try a different URL."
+        } else if !hasValidExtension {
+            // Show an alert to the user
+            await MainActor.run {
+                showInvalidExtensionAlert = true
+            }
         } else {
             await action()
         }

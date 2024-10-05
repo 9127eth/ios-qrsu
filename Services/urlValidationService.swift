@@ -10,7 +10,7 @@ class URLValidationService {
         self.webRiskAPIKey = apiKey
     }
     
-    func validateURL(_ url: String) async -> (isValid: Bool, isSafe: Bool) {
+    func validateURL(_ url: String) async -> (isValid: Bool, isSafe: Bool, hasValidExtension: Bool) {
         // Prepend "https://" if the URL doesn't start with a scheme
         let urlWithScheme = url.lowercased().hasPrefix("http://") || url.lowercased().hasPrefix("https://") ? url : "https://" + url
         
@@ -19,11 +19,15 @@ class URLValidationService {
               let components = URLComponents(url: url, resolvingAgainstBaseURL: true),
               let host = components.host,
               !host.isEmpty else {
-            return (false, false)
+            return (false, false, false)
         }
         
+        let hasValidExtension = isValidDomainExtension(urlWithScheme)
+        
         // If the URL is valid, check its safety
-        return await checkURLSafety(urlWithScheme)
+        let (_, isSafe) = await checkURLSafety(urlWithScheme)
+        
+        return (true, isSafe, hasValidExtension)
     }
     
     private func checkURLSafety(_ url: String) async -> (isValid: Bool, isSafe: Bool) {
@@ -51,6 +55,21 @@ class URLValidationService {
             print("Error validating URL safety: \(error)")
             return (true, false) // Assume unsafe if there's an error
         }
+    }
+    
+    func isValidDomainExtension(_ url: String) -> Bool {
+        let validExtensions = ["com", "org", "net", "edu", "gov", "io", "co", "app", "dev", "ai", "me", "info", "biz", "tv"]
+        
+        guard let host = URL(string: url)?.host else {
+            return false
+        }
+        
+        let components = host.components(separatedBy: ".")
+        guard let topLevelDomain = components.last else {
+            return false
+        }
+        
+        return validExtensions.contains(topLevelDomain.lowercased())
     }
 }
 
