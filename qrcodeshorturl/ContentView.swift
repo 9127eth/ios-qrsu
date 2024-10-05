@@ -52,10 +52,10 @@ struct ContentView: View {
     
     func headerView() -> some View {
         VStack {
-            Text("The best QR Code/Short")
+            Text("The best QR Code &")
                 .font(.largeTitle)
                 .fontWeight(.bold)
-            Text("URL generator ever.")
+            Text("Short URL generator ever.")
                 .font(.largeTitle)
                 .fontWeight(.bold)
             Text("Generate a QR code and a short URL for any website.")
@@ -70,9 +70,17 @@ struct ContentView: View {
             Text("Enter a URL")
                 .font(.headline)
             TextField("https://example.com", text: $url)
+                .placeholder(when: url.isEmpty) {
+                    Text("https://example.com").foregroundColor(.gray)
+                }
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .autocapitalization(.none)
                 .disableAutocorrection(true)
+                .padding()
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(url.isEmpty ? Color.clear : Color.black, lineWidth: 2)
+                )
             if let error = validationError {
                 Text(error)
                     .foregroundColor(.red)
@@ -82,12 +90,13 @@ struct ContentView: View {
     }
     
     func actionButtonsView() -> some View {
-        HStack {
+        HStack(spacing: 10) {
             Button("Get QR Code") {
                 Task {
                     await generateQRCode()
                 }
             }
+            .buttonStyle(BlackButtonStyle())
             .disabled(url.isEmpty || isValidating)
             
             Button("Get Short URL") {
@@ -95,7 +104,39 @@ struct ContentView: View {
                     await generateShortURL()
                 }
             }
+            .buttonStyle(WhiteButtonStyle())
             .disabled(url.isEmpty || isValidating)
+        }
+        .frame(maxWidth: .infinity)
+    }
+    
+    // Black button style
+    struct BlackButtonStyle: ButtonStyle {
+        func makeBody(configuration: Configuration) -> some View {
+            configuration.label
+                .fontWeight(.bold)
+                .padding(.vertical, 12)
+                .frame(maxWidth: .infinity)
+                .background(configuration.isPressed ? Color.gray : Color.black)
+                .foregroundColor(.white)
+                .cornerRadius(8)
+        }
+    }
+    
+    // White button style
+    struct WhiteButtonStyle: ButtonStyle {
+        func makeBody(configuration: Configuration) -> some View {
+            configuration.label
+                .fontWeight(.bold)
+                .padding(.vertical, 12)
+                .frame(maxWidth: .infinity)
+                .background(configuration.isPressed ? Color.gray.opacity(0.2) : Color.white)
+                .foregroundColor(.black)
+                .cornerRadius(8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.gray, lineWidth: 1)
+                )
         }
     }
     
@@ -128,9 +169,13 @@ struct ContentView: View {
             }
             .padding(.vertical, 8)
             .padding(.horizontal, 16)
-            .background(Color.blue)
-            .foregroundColor(.white)
+            .background(Color.white)
+            .foregroundColor(.black)
             .cornerRadius(8)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.gray, lineWidth: 1)
+            )
         }
         .padding()
         .background(Color.white)
@@ -224,7 +269,7 @@ struct ContentView: View {
             shortURL = ""
             validationError = nil
         }
-        .foregroundColor(.blue)
+        .foregroundColor(.black)
     }
 }
 
@@ -243,4 +288,17 @@ private let itemFormatter: DateFormatter = {
 
 #Preview {
     ContentView().environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+}
+
+extension View {
+    func placeholder<Content: View>(
+        when shouldShow: Bool,
+        alignment: Alignment = .leading,
+        @ViewBuilder placeholder: () -> Content) -> some View {
+
+        ZStack(alignment: alignment) {
+            placeholder().opacity(shouldShow ? 1 : 0)
+            self
+        }
+    }
 }
