@@ -21,7 +21,6 @@ struct ContentView: View {
     @State private var isValidating: Bool = false
     @State private var validationError: String? = nil
     @State private var showInvalidExtensionAlert = false
-    @State private var isCopied: Bool = false
     @State private var selectedFormat: String = "png"
     @State private var transparentBackground: Bool = false
     @State private var svgData: String? = nil
@@ -138,12 +137,15 @@ struct ContentView: View {
                 .focused($isInputFocused) // Bind to focus state
                 .autocapitalization(.none)
                 .disableAutocorrection(true)
-                .padding(.vertical)
+                .padding(.vertical, 8)
+                .padding(.horizontal, 4) // Add horizontal padding inside the border
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(url.isEmpty ? Color.clear : Color.black, lineWidth: 2)
+                        .padding(.horizontal, -4) // Adjust the border to account for the padding
                 )
         }
+        .padding(.horizontal, 20) // Add padding to the entire VStack
     }
 
     func actionButtonsView() -> some View {
@@ -221,33 +223,24 @@ struct ContentView: View {
                 }
             }
 
-            HStack(spacing: 10) {
-                Button(action: {
-                    shareQRCode()
-                }) {
-                    HStack {
-                        Image(systemName: "square.and.arrow.up")
-                        Text("Share")
-                    }
-                    .frame(minWidth: 0, maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(Color.white)
-                    .foregroundColor(.black)
-                    .cornerRadius(8)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.gray, lineWidth: 1)
-                    )
+            Button(action: {
+                shareQRCode()
+            }) {
+                HStack {
+                    Image(systemName: "square.and.arrow.up")
+                    Text("Share")
                 }
-                .frame(width: 150)
-
-                Button("Save") {
-                    saveQRCodeToPhotos()
-                }
-                .disabled(qrCodeImage == nil)
-                .buttonStyle(BlackButtonStyle())
-                .frame(width: 150)
+                .frame(width: 150)  // Keep the width the same
+                .padding(.vertical, 12)  // Keep the height the same
+                .background(Color.white)
+                .foregroundColor(.black)
+                .cornerRadius(8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.gray, lineWidth: 1)
+                )
             }
+            .frame(maxWidth: .infinity)  // This will allow the button to be centered
         }
         .frame(maxWidth: .infinity)
         .padding()
@@ -274,18 +267,17 @@ struct ContentView: View {
                     )
 
                 Button(action: {
-                    UIPasteboard.general.string = shortURL
-                    isCopied = true
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                        isCopied = false
-                    }
+                    shareShortURL()
                 }) {
-                    Text(isCopied ? "Copied!" : "Copy")
-                        .padding(.vertical, 8)
-                        .padding(.horizontal, 16)
-                        .background(isCopied ? Color.green : Color.black)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
+                    HStack {
+                        Image(systemName: "square.and.arrow.up")
+                        Text("Share")
+                    }
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 16)
+                    .background(Color.black)
+                    .foregroundColor(.white)
+                    .cornerRadius(8)
                 }
             }
         }
@@ -468,6 +460,20 @@ struct ContentView: View {
             @unknown default:
                 break
             }
+        }
+    }
+
+    // Add this function to handle sharing the short URL
+    func shareShortURL() {
+        let activityViewController = UIActivityViewController(
+            activityItems: [shortURL],
+            applicationActivities: nil
+        )
+        
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let window = windowScene.windows.first,
+           let rootViewController = window.rootViewController {
+            rootViewController.present(activityViewController, animated: true, completion: nil)
         }
     }
 }
