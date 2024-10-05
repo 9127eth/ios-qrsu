@@ -11,18 +11,19 @@ class URLValidationService {
     }
     
     func validateURL(_ url: String) async -> (isValid: Bool, isSafe: Bool) {
-        // First, check if the URL is valid
-        guard let url = URL(string: url),
+        // Prepend "https://" if the URL doesn't start with a scheme
+        let urlWithScheme = url.lowercased().hasPrefix("http://") || url.lowercased().hasPrefix("https://") ? url : "https://" + url
+        
+        // Check if the URL is valid
+        guard let url = URL(string: urlWithScheme),
               let components = URLComponents(url: url, resolvingAgainstBaseURL: true),
-              let scheme = components.scheme,
               let host = components.host,
-              !host.isEmpty,
-              (scheme == "http" || scheme == "https") else {
+              !host.isEmpty else {
             return (false, false)
         }
         
         // If the URL is valid, check its safety
-        return await checkURLSafety(url.absoluteString)
+        return await checkURLSafety(urlWithScheme)
     }
     
     private func checkURLSafety(_ url: String) async -> (isValid: Bool, isSafe: Bool) {

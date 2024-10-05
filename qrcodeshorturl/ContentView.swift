@@ -188,7 +188,7 @@ struct ContentView: View {
         let (isValid, isSafe) = await urlValidationService.validateURL(url)
         
         if !isValid {
-            validationError = "Invalid URL. Please enter a valid URL with http:// or https:// prefix."
+            validationError = "Invalid URL. Please enter a valid URL."
         } else if !isSafe {
             validationError = "This URL may be unsafe. Please try a different URL."
         } else {
