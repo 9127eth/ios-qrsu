@@ -30,25 +30,47 @@ class URLService {
         return "https://\(shortURLDomain)/\(shortCode)"
     }
     
-    func generateQRCode(for url: String, size: CGSize = CGSize(width: 1024, height: 1024)) -> UIImage? {
-        guard let data = url.data(using: .utf8) else { return nil }
+    func generateQRCode(for url: String, size: CGSize, format: String, transparent: Bool) -> UIImage? {
+        guard let filter = CIFilter(name: "CIQRCodeGenerator") else { return nil }
+        
+        let data = url.data(using: .ascii, allowLossyConversion: false)
+        filter.setValue(data, forKey: "inputMessage")
+        
+        guard let ciImage = filter.outputImage else { return nil }
+        
+        let transform = CGAffineTransform(scaleX: size.width / ciImage.extent.size.width, y: size.height / ciImage.extent.size.height)
+        let scaledCIImage = ciImage.transformed(by: transform)
         
         let context = CIContext()
-        let filter = CIFilter.qrCodeGenerator()
+        guard let cgImage = context.createCGImage(scaledCIImage, from: scaledCIImage.extent) else { return nil }
         
-        filter.setValue(data, forKey: "inputMessage")
-        filter.setValue("H", forKey: "inputCorrectionLevel") // Highest error correction
+        let format = format.lowercased()
+        let alphaInfo: CGImageAlphaInfo = transparent ? .premultipliedLast : .noneSkipLast
         
-        guard let outputImage = filter.outputImage else { return nil }
+        guard let colorSpace = CGColorSpace(name: CGColorSpace.sRGB) else { return nil }
+        guard let bitmapContext = CGContext(data: nil,
+                                            width: Int(size.width),
+                                            height: Int(size.height),
+                                            bitsPerComponent: 8,
+                                            bytesPerRow: 0,
+                                            space: colorSpace,
+                                            bitmapInfo: alphaInfo.rawValue) else { return nil }
         
-        // Scale the image to the full size
-        let fullSizeImage = outputImage.transformed(by: CGAffineTransform(scaleX: size.width / outputImage.extent.width,
-                                                                          y: size.height / outputImage.extent.height))
+        bitmapContext.interpolationQuality = .none
+        bitmapContext.draw(cgImage, in: CGRect(origin: .zero, size: size))
         
-        // Create full-size UIImage
-        guard let cgImage = context.createCGImage(fullSizeImage, from: fullSizeImage.extent) else { return nil }
+        guard let outputCGImage = bitmapContext.makeImage() else { return nil }
         
-        return UIImage(cgImage: cgImage)
+        let outputImage = UIImage(cgImage: outputCGImage)
+        
+        if format == "svg" {
+            // SVG generation is not natively supported in iOS
+            // You would need to use a third-party library or implement custom SVG generation
+            print("SVG format is not supported in this implementation")
+            return outputImage
+        }
+        
+        return outputImage
     }
     
     private func generateShortCode() -> String {

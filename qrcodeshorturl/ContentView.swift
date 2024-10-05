@@ -19,6 +19,8 @@ struct ContentView: View {
     @State private var validationError: String? = nil
     @State private var showInvalidExtensionAlert = false
     @State private var isCopied: Bool = false
+    @State private var selectedFormat: String = "png"
+    @State private var transparentBackground: Bool = false
     
     private let urlService = URLService.shared
     private let urlValidationService = URLValidationService()
@@ -152,7 +154,6 @@ struct ContentView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 200, height: 200)
-                    .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
             } else {
                 Text("QR Code")
                     .frame(width: 200, height: 200)
@@ -163,31 +164,42 @@ struct ContentView: View {
                 HStack {
                     Text("Format:")
                         .font(.subheadline)
-                        .foregroundColor(.gray)
-                    Picker("Format", selection: .constant("png")) {
+                        .foregroundColor(.black)
+                    Picker("Format", selection: $selectedFormat) {
                         Text("PNG").tag("png")
                         Text("JPEG").tag("jpeg")
                         Text("SVG").tag("svg")
                     }
                     .pickerStyle(SegmentedPickerStyle())
+                    .onChange(of: selectedFormat) { newValue in
+                        if newValue == "jpeg" {
+                            transparentBackground = false
+                        }
+                        Task {
+                            await generateQRCode()
+                        }
+                    }
                 }
                 
-                Toggle(isOn: .constant(false)) {
+                Toggle(isOn: $transparentBackground) {
                     Text("Transparent Background")
                         .font(.subheadline)
-                        .foregroundColor(.gray)
+                        .foregroundColor(.black)
                 }
                 .toggleStyle(SwitchToggleStyle(tint: .blue))
+                .disabled(selectedFormat == "jpeg")
+                .onChange(of: transparentBackground) { newValue in
+                    if newValue && selectedFormat == "jpeg" {
+                        selectedFormat = "png"
+                    }
+                    Task {
+                        await generateQRCode()
+                    }
+                }
             }
-            .padding()
-            .background(Color.gray.opacity(0.05))
-            .cornerRadius(10)
             
             Button(action: {
-                if let qrImage = qrCodeImage {
-                    let activityViewController = UIActivityViewController(activityItems: [qrImage], applicationActivities: nil)
-                    UIApplication.shared.windows.first?.rootViewController?.present(activityViewController, animated: true, completion: nil)
-                }
+                shareQRCode()
             }) {
                 HStack {
                     Image(systemName: "square.and.arrow.up")
@@ -203,7 +215,7 @@ struct ContentView: View {
                         .stroke(Color.gray, lineWidth: 1)
                 )
             }
-            .frame(width: 150) // Adjust this width to match the "Get QR Code" button
+            .frame(width: 150)
         }
         .frame(width: containerWidth)
         .padding()
@@ -260,7 +272,7 @@ struct ContentView: View {
     func generateQRCode() async {
         await validateAndProcess {
             let formattedURL = url.lowercased().hasPrefix("http") ? url : "https://" + url
-            qrCodeImage = urlService.generateQRCode(for: formattedURL, size: CGSize(width: 1024, height: 1024))
+            qrCodeImage = urlService.generateQRCode(for: formattedURL, size: CGSize(width: 1024, height: 1024), format: selectedFormat, transparent: transparentBackground)
             showQRCode = true
         }
     }
@@ -308,6 +320,42 @@ struct ContentView: View {
             validationError = nil
         }
         .foregroundColor(.black)
+    }
+    
+    func shareQRCode() {
+        guard let qrImage = qrCodeImage else { return }
+        
+        var imageToShare: UIImage
+        var fileExtension: String
+        
+        if selectedFormat.lowercased() == "jpeg" {
+            // For JPEG, flatten against a white background
+            UIGraphicsBeginImageContextWithOptions(qrImage.size, true, qrImage.scale)
+            UIColor.white.set()
+            UIRectFill(CGRect(origin: .zero, size: qrImage.size))
+            qrImage.draw(in: CGRect(origin: .zero, size: qrImage.size))
+            imageToShare = UIGraphicsGetImageFromCurrentImageContext() ?? qrImage
+            UIGraphicsEndImageContext()
+            fileExtension = "jpg"
+        } else {
+            // For PNG and other formats, use the image as-is
+            imageToShare = qrImage
+            fileExtension = "png"
+        }
+        
+        // Create a temporary file URL for the image
+        let temporaryDirectory = FileManager.default.temporaryDirectory
+        let fileName = "QRCode.\(fileExtension)"
+        let fileURL = temporaryDirectory.appendingPathComponent(fileName)
+        
+        // Write the image data to the file
+        if let imageData = fileExtension == "jpg" ? imageToShare.jpegData(compressionQuality: 1.0) : imageToShare.pngData() {
+            try? imageData.write(to: fileURL)
+            
+            // Share the file URL
+            let activityViewController = UIActivityViewController(activityItems: [fileURL], applicationActivities: nil)
+            UIApplication.shared.windows.first?.rootViewController?.present(activityViewController, animated: true, completion: nil)
+        }
     }
 }
 
