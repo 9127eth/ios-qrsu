@@ -17,9 +17,12 @@ struct ContentView: View {
     @State private var isValidating: Bool = false
     @State private var validationError: String? = nil
     @State private var showInvalidExtensionAlert = false
+    @State private var isCopied: Bool = false
     
     private let urlService = URLService.shared
     private let urlValidationService = URLValidationService()
+    
+    private let containerWidth: CGFloat = 300 // Adjust this value as needed
     
     var body: some View {
         VStack(spacing: 20) {
@@ -147,10 +150,10 @@ struct ContentView: View {
                     .interpolation(.none)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 193, height: 193)
+                    .frame(width: 150, height: 150)
             } else {
                 Text("QR Code")
-                    .frame(width: 193, height: 193)
+                    .frame(width: 150, height: 150)
                     .background(Color.gray.opacity(0.2))
             }
             
@@ -178,6 +181,7 @@ struct ContentView: View {
                     .stroke(Color.gray, lineWidth: 1)
             )
         }
+        .frame(width: containerWidth)
         .padding()
         .background(Color.white)
         .cornerRadius(12)
@@ -192,7 +196,7 @@ struct ContentView: View {
             HStack {
                 Text(shortURL)
                     .padding(8)
-                    .background(Color.white) // Changed from Color.gray.opacity(0.2) to Color.white
+                    .background(Color.white)
                     .cornerRadius(8)
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
@@ -200,12 +204,16 @@ struct ContentView: View {
                     )
                 
                 Button(action: {
-                    // Implement copy logic
+                    UIPasteboard.general.string = shortURL
+                    isCopied = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        isCopied = false
+                    }
                 }) {
-                    Text("Copy")
+                    Text(isCopied ? "Copied!" : "Copy")
                         .padding(.vertical, 8)
                         .padding(.horizontal, 16)
-                        .background(Color.black)
+                        .background(isCopied ? Color.green : Color.black)
                         .foregroundColor(.white)
                         .cornerRadius(8)
                 }
@@ -218,6 +226,7 @@ struct ContentView: View {
                 }
             }
         }
+        .frame(width: containerWidth)
         .padding()
         .background(Color.white)
         .cornerRadius(12)
