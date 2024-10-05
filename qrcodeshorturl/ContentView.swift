@@ -176,7 +176,8 @@ struct ContentView: View {
     
     func generateQRCode() async {
         await validateAndProcess {
-            qrCodeImage = urlService.generateQRCode(for: url)
+            let formattedURL = url.lowercased().hasPrefix("http") ? url : "https://" + url
+            qrCodeImage = urlService.generateQRCode(for: formattedURL)
             showQRCode = true
         }
     }
