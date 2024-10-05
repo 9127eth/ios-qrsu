@@ -9,6 +9,7 @@ import SwiftUI
 import CoreData
 import UIKit
 import WebKit
+import Photos
 
 struct ContentView: View {
     @State private var url: String = ""
@@ -245,6 +246,11 @@ struct ContentView: View {
                 )
             }
             .frame(width: 150)
+            
+            Button("Save") {
+                saveQRCodeToPhotos()
+            }
+            .disabled(qrCodeImage == nil)
         }
         .frame(width: containerWidth)
         .padding()
@@ -398,6 +404,42 @@ struct ContentView: View {
         
         let activityViewController = UIActivityViewController(activityItems: itemsToShare, applicationActivities: nil)
         UIApplication.shared.windows.first?.rootViewController?.present(activityViewController, animated: true, completion: nil)
+    }
+    
+    func saveQRCodeToPhotos() {
+        guard let qrImage = qrCodeImage else {
+            print("No QR code image to save")
+            return
+        }
+        
+        PHPhotoLibrary.requestAuthorization { status in
+            switch status {
+            case .authorized, .limited:
+                PHPhotoLibrary.shared().performChanges({
+                    PHAssetChangeRequest.creationRequestForAsset(from: qrImage)
+                }) { success, error in
+                    DispatchQueue.main.async {
+                        if success {
+                            print("QR code saved to photos")
+                            // You can show a success message to the user here
+                        } else if let error = error {
+                            print("Error saving QR code: \(error.localizedDescription)")
+                            // You can show an error message to the user here
+                        }
+                    }
+                }
+            case .denied, .restricted:
+                DispatchQueue.main.async {
+                    print("Photo library access denied")
+                    // You can show an alert to the user here, explaining that they need to grant access in Settings
+                }
+            case .notDetermined:
+                // This case should not be reached as we're inside the callback of requestAuthorization
+                break
+            @unknown default:
+                break
+            }
+        }
     }
 }
 

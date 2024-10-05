@@ -26,7 +26,5 @@
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
 	<string>1:445001187365:ios:50474006b4e01bd27f3fcc</string>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>This app needs permission to save QR code images to your photo library.</string>
 </dict>
 </plist>
