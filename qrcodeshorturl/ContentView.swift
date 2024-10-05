@@ -91,7 +91,11 @@ struct ContentView: View {
             Button("Cancel", role: .cancel) { }
             Button("Proceed Anyway") {
                 Task {
-                    await generateQRCode()
+                    if showQRCode {
+                        await generateQRCodeImage(for: url)
+                    } else {
+                        await generateShortURLString(for: url)
+                    }
                 }
             }
         } message: {
@@ -361,16 +365,22 @@ struct ContentView: View {
             return
         }
         if !hasValidExtension {
-            showInvalidExtensionAlert = true
+            await MainActor.run {
+                showInvalidExtensionAlert = true
+            }
             return
         }
 
+        await generateQRCodeImage(for: urlWithScheme)
+    }
+
+    func generateQRCodeImage(for urlString: String) {
         // Always generate PNG for display
-        qrCodeImage = urlService.generateQRCode(for: urlWithScheme, size: CGSize(width: 200, height: 200), format: "png", transparent: transparentBackground)
+        qrCodeImage = urlService.generateQRCode(for: urlString, size: CGSize(width: 200, height: 200), format: "png", transparent: transparentBackground)
 
         // Generate SVG data if selected
         if selectedFormat == "svg" {
-            svgData = urlService.generateSVGQRCode(for: urlWithScheme, size: 200)
+            svgData = urlService.generateSVGQRCode(for: urlString, size: 200)
         } else {
             svgData = nil
         }
@@ -380,13 +390,37 @@ struct ContentView: View {
     }
 
     func generateShortURL() async {
-        await validateAndProcess {
-            do {
-                shortURL = try await urlService.shortenURL(url)
-                showShortURL = true
-            } catch {
-                validationError = "Error shortening URL: \(error.localizedDescription)"
+        isValidating = true
+        defer { isValidating = false }
+
+        let urlWithScheme = url.lowercased().hasPrefix("http://") || url.lowercased().hasPrefix("https://") ? url : "https://" + url
+
+        let (isValid, isSafe, hasValidExtension) = await urlValidationService.validateURL(urlWithScheme)
+        if !isValid {
+            validationError = "Invalid URL"
+            return
+        }
+        if !isSafe {
+            validationError = "URL may not be safe"
+            return
+        }
+        if !hasValidExtension {
+            await MainActor.run {
+                showInvalidExtensionAlert = true
             }
+            return
+        }
+
+        await generateShortURLString(for: urlWithScheme)
+    }
+
+    func generateShortURLString(for urlString: String) async {
+        do {
+            shortURL = try await urlService.shortenURL(urlString)
+            showShortURL = true
+            validationError = nil
+        } catch {
+            validationError = "Error shortening URL: \(error.localizedDescription)"
         }
     }
 
