@@ -23,6 +23,7 @@ struct ContentView: View {
     @State private var selectedFormat: String = "png"
     @State private var transparentBackground: Bool = false
     @State private var svgData: String? = nil
+    @State private var isInputFocused: Bool = false
     
     private let urlService = URLService.shared
     private let urlValidationService = URLValidationService()
@@ -30,22 +31,35 @@ struct ContentView: View {
     private let containerWidth: CGFloat = 300 // Adjust this value as needed
     
     var body: some View {
-        VStack(spacing: 20) {
-            headerView()
-            urlInputView()
-            actionButtonsView()
+        ZStack {
+            Color.white.edgesIgnoringSafeArea(.all)
+                .onTapGesture {
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        isInputFocused = false
+                    }
+                }
             
-            if showQRCode {
-                qrCodeView()
+            ScrollView {
+                VStack(spacing: 20) {
+                    headerView()
+                    urlInputView()
+                    actionButtonsView()
+                    
+                    if showQRCode {
+                        qrCodeView()
+                    }
+                    
+                    if showShortURL {
+                        shortURLView()
+                    }
+                    
+                    clearButton()
+                }
+                .padding()
             }
-            
-            if showShortURL {
-                shortURLView()
-            }
-            
-            clearButton()
+            .animation(.easeInOut(duration: 0.3), value: isInputFocused)
         }
-        .padding()
         .alert("Invalid Domain Extension", isPresented: $showInvalidExtensionAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Proceed Anyway") {
@@ -71,12 +85,19 @@ struct ContentView: View {
                 .foregroundColor(.gray)
         }
         .multilineTextAlignment(.center)
+        .opacity(isInputFocused ? 0 : 1)
+        .animation(.easeInOut(duration: 0.3), value: isInputFocused)
+        .frame(height: isInputFocused ? 0 : nil)
+        .clipped()
     }
     
     func urlInputView() -> some View {
         VStack(alignment: .leading) {
             Text("Enter a URL")
                 .font(.headline)
+                .opacity(isInputFocused ? 0.7 : 1)
+                .animation(.easeInOut(duration: 0.3), value: isInputFocused)
+            
             TextField("https://example.com", text: $url)
                 .placeholder(when: url.isEmpty) {
                     Text("https://example.com").foregroundColor(.gray)
@@ -89,6 +110,12 @@ struct ContentView: View {
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(url.isEmpty ? Color.clear : Color.black, lineWidth: 2)
                 )
+                .onTapGesture {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        isInputFocused = true
+                    }
+                }
+            
             if let error = validationError {
                 Text(error)
                     .foregroundColor(.red)
