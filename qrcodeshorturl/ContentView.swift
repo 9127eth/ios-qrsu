@@ -7,6 +7,7 @@
 
 import SwiftUI
 import CoreData
+import UIKit
 
 struct ContentView: View {
     @State private var url: String = ""
@@ -144,48 +145,71 @@ struct ContentView: View {
     }
     
     func qrCodeView() -> some View {
-        VStack {
+        VStack(spacing: 20) {
             if let qrImage = qrCodeImage {
                 Image(uiImage: qrImage)
                     .interpolation(.none)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 150, height: 150)
+                    .frame(width: 200, height: 200)
+                    .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
             } else {
                 Text("QR Code")
-                    .frame(width: 150, height: 150)
+                    .frame(width: 200, height: 200)
                     .background(Color.gray.opacity(0.2))
             }
             
-            HStack {
-                Picker("Format", selection: .constant("png")) {
-                    Text("PNG").tag("png")
-                    Text("JPEG").tag("jpeg")
-                    Text("SVG").tag("svg")
+            VStack(spacing: 15) {
+                HStack {
+                    Text("Format:")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                    Picker("Format", selection: .constant("png")) {
+                        Text("PNG").tag("png")
+                        Text("JPEG").tag("jpeg")
+                        Text("SVG").tag("svg")
+                    }
+                    .pickerStyle(SegmentedPickerStyle())
                 }
-                .pickerStyle(MenuPickerStyle())
                 
-                Toggle("no background", isOn: .constant(false))
+                Toggle(isOn: .constant(false)) {
+                    Text("Transparent Background")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                }
+                .toggleStyle(SwitchToggleStyle(tint: .blue))
             }
+            .padding()
+            .background(Color.gray.opacity(0.05))
+            .cornerRadius(10)
             
-            Button("Download") {
-                // Implement download logic
+            Button(action: {
+                if let qrImage = qrCodeImage {
+                    let activityViewController = UIActivityViewController(activityItems: [qrImage], applicationActivities: nil)
+                    UIApplication.shared.windows.first?.rootViewController?.present(activityViewController, animated: true, completion: nil)
+                }
+            }) {
+                HStack {
+                    Image(systemName: "square.and.arrow.up")
+                    Text("Share")
+                }
+                .frame(minWidth: 0, maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(Color.white)
+                .foregroundColor(.black)
+                .cornerRadius(8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.gray, lineWidth: 1)
+                )
             }
-            .padding(.vertical, 8)
-            .padding(.horizontal, 16)
-            .background(Color.white)
-            .foregroundColor(.black)
-            .cornerRadius(8)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color.gray, lineWidth: 1)
-            )
+            .frame(width: 150) // Adjust this width to match the "Get QR Code" button
         }
         .frame(width: containerWidth)
         .padding()
         .background(Color.white)
         .cornerRadius(12)
-        .shadow(radius: 5)
+        .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
     }
     
     func shortURLView() -> some View {
