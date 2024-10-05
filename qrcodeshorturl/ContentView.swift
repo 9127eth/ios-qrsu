@@ -27,6 +27,8 @@ struct ContentView: View {
     @State private var svgData: String? = nil
     @FocusState private var isInputFocused: Bool // Use @FocusState for input focus
 
+    @State private var keyboardHeight: CGFloat = 0
+
     private let urlService = URLService.shared
     private let urlValidationService = URLValidationService()
 
@@ -96,6 +98,14 @@ struct ContentView: View {
         } message: {
             Text("The domain extension you entered is not recognized. Do you want to proceed anyway?")
         }
+        .ignoresSafeArea(.keyboard) // Ignore the keyboard safe area
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { notification in
+            if let keyboardFrame: NSValue = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue {
+                let keyboardRectangle = keyboardFrame.cgRectValue
+                keyboardHeight = keyboardRectangle.height
+            }
+        }
+        .padding(.bottom, keyboardHeight) // Add padding to the bottom of the view
     }
 
     // MARK: - Views
