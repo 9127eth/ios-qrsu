@@ -411,25 +411,17 @@ struct ContentView: View {
     }
 
     func shareQRCode() {
-        var itemsToShare: [Any] = []
-
-        if selectedFormat == "svg", let svgData = svgData {
-            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("qrcode.svg")
-            do {
-                try svgData.write(to: tempURL, atomically: true, encoding: .utf8)
-                itemsToShare.append(tempURL)
-            } catch {
-                print("Error saving SVG file: \(error)")
-            }
-        } else if let image = qrCodeImage {
-            itemsToShare.append(image)
-        }
-
-        let activityViewController = UIActivityViewController(activityItems: itemsToShare, applicationActivities: nil)
-
+        guard let qrImage = qrCodeImage else { return }
+        
+        let activityViewController = UIActivityViewController(
+            activityItems: [qrImage],
+            applicationActivities: nil
+        )
+        
         if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let window = windowScene.windows.first {
-            window.rootViewController?.present(activityViewController, animated: true, completion: nil)
+           let window = windowScene.windows.first,
+           let rootViewController = window.rootViewController {
+            rootViewController.present(activityViewController, animated: true, completion: nil)
         }
     }
 
