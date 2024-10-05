@@ -1,0 +1,14 @@
+I want to remove the requirement for the user to input https:// as a rule for url validation.
+
+for urls
+
+we dont actually need to check if the url starts with http.
+My web code is set up where the rerouting address is set to https.
+
+
+for QR codes, 
+we should prepend https:// to the URL if the user doesnnt input it.
+
+for each of these though. We do need to make sure the domain is valid.
+so we should implement a URLValidator that checks if the domain is valid.
+If it is not valid, the user should be asked if they want to proceed.
