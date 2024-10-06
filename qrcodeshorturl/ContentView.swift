@@ -11,6 +11,7 @@ import UIKit
 import WebKit
 import Photos
 import PhotosUI
+import GoogleMobileAds
 
 struct ContentView: View {
     @State private var url: String = ""
@@ -25,6 +26,7 @@ struct ContentView: View {
     @State private var transparentBackground: Bool = false
     @State private var svgData: String? = nil
     @FocusState private var isInputFocused: Bool // Use @FocusState for input focus
+    @State private var showAd: Bool = false
 
     @State private var keyboardHeight: CGFloat = 0
 
@@ -309,14 +311,22 @@ struct ContentView: View {
     // MARK: - Clear Button View
 
     func clearButtonView() -> some View {
-        Button(action: {
-            clearAll()
-        }) {
-            Text("Clear")
-                .foregroundColor(.black)
-                .padding(.vertical, 10)
+        VStack(spacing: 20) {
+            Button(action: {
+                clearAll()
+            }) {
+                Text("Clear")
+                    .foregroundColor(.black)
+                    .padding(.vertical, 10)
+            }
+            .padding(.horizontal)
+            
+            if showAd {
+                NativeAdView(adUnitID: "ca-app-pub-3940256099942544/3986624511") // Use your actual ad unit ID here
+                    .frame(height: 300)
+                    .padding()
+            }
         }
-        .padding(.horizontal)
         .padding(.bottom, 20)
     }
 
@@ -361,6 +371,7 @@ struct ContentView: View {
         validationError = nil
         // Dismiss the keyboard if it's open
         isInputFocused = false
+        showAd = false
     }
 
     func generateQRCode() async {
@@ -386,6 +397,7 @@ struct ContentView: View {
         }
 
         await generateQRCodeImage(for: urlWithScheme)
+        showAd = true
     }
 
     func generateQRCodeImage(for urlString: String) {
@@ -431,6 +443,7 @@ struct ContentView: View {
         }
 
         await generateShortURLString(for: urlWithScheme)
+        showAd = true
     }
 
     func generateShortURLString(for urlString: String) async {
