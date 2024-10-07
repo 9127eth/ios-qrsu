@@ -140,6 +140,7 @@ struct ContentView: View {
         HStack(spacing: 10) {
             Button("Get QR Code") {
                 Task {
+                    hideHeader = true
                     await generateQRCode()
                 }
             }
@@ -148,6 +149,7 @@ struct ContentView: View {
 
             Button("Get Short URL") {
                 Task {
+                    hideHeader = true
                     await generateShortURL()
                 }
             }
@@ -218,12 +220,17 @@ struct ContentView: View {
                     Image(systemName: "square.and.arrow.up")
                     Text("Share")
                 }
-                .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
-                .background(Color.black)
-                .foregroundColor(.white)
+                .padding(.horizontal, 24)
+                .background(Color.white)
+                .foregroundColor(.black)
                 .cornerRadius(8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.gray, lineWidth: 1)
+                )
             }
+            .frame(maxWidth: 200) // Limit the width of the button
         }
         .padding()
     }
@@ -231,16 +238,19 @@ struct ContentView: View {
     // MARK: - Short URL View
 
     func shortURLView() -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Short URL:")
-                .font(.headline)
+        VStack(alignment: .center, spacing: 20) {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Short URL:")
+                    .font(.headline)
 
-            HStack(spacing: 10) {
                 Text(shortURL)
                     .padding(8)
                     .background(Color.gray.opacity(0.1))
                     .cornerRadius(8)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
+            HStack(spacing: 20) {
                 Button(action: {
                     shareShortURL()
                 }) {
@@ -248,21 +258,26 @@ struct ContentView: View {
                         Image(systemName: "square.and.arrow.up")
                         Text("Share")
                     }
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 24)
                     .background(Color.black)
                     .foregroundColor(.white)
                     .cornerRadius(8)
                 }
+                .frame(height: 44)
 
                 Button(action: {
                     generateQRCodeForShortURL()
                 }) {
                     Image(systemName: "qrcode")
-                        .foregroundColor(.white)
-                        .frame(width: 36, height: 36)
-                        .background(Color.black)
+                        .foregroundColor(.black)
+                        .frame(width: 44, height: 44)
+                        .background(Color.white)
                         .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.gray, lineWidth: 1)
+                        )
                 }
             }
         }
@@ -327,25 +342,34 @@ struct ContentView: View {
     }
 
     func generateQRCode() async {
-        isValidating = true
-        defer { isValidating = false }
+        await MainActor.run {
+            isValidating = true
+            validationError = nil
+        }
+        
+        defer {
+            Task { @MainActor in
+                isValidating = false
+            }
+        }
 
         let urlWithScheme = url.lowercased().hasPrefix("http://") || url.lowercased().hasPrefix("https://") ? url : "https://" + url
 
         let (isValid, isSafe, hasValidExtension) = await urlValidationService.validateURL(urlWithScheme)
-        if !isValid {
-            validationError = "Invalid URL"
-            return
-        }
-        if !isSafe {
-            validationError = "URL may not be safe"
-            return
-        }
-        if !hasValidExtension {
-            await MainActor.run {
-                showInvalidExtensionAlert = true
+        
+        await MainActor.run {
+            if !isValid {
+                validationError = "Invalid URL"
+                return
             }
-            return
+            if !isSafe {
+                validationError = "URL may not be safe"
+                return
+            }
+            if !hasValidExtension {
+                showInvalidExtensionAlert = true
+                return
+            }
         }
 
         await generateQRCodeImage(for: urlWithScheme)
@@ -372,25 +396,34 @@ struct ContentView: View {
     }
 
     func generateShortURL() async {
-        isValidating = true
-        defer { isValidating = false }
+        await MainActor.run {
+            isValidating = true
+            validationError = nil
+        }
+        
+        defer {
+            Task { @MainActor in
+                isValidating = false
+            }
+        }
 
         let urlWithScheme = url.lowercased().hasPrefix("http://") || url.lowercased().hasPrefix("https://") ? url : "https://" + url
 
         let (isValid, isSafe, hasValidExtension) = await urlValidationService.validateURL(urlWithScheme)
-        if !isValid {
-            validationError = "Invalid URL"
-            return
-        }
-        if !isSafe {
-            validationError = "URL may not be safe"
-            return
-        }
-        if !hasValidExtension {
-            await MainActor.run {
-                showInvalidExtensionAlert = true
+        
+        await MainActor.run {
+            if !isValid {
+                validationError = "Invalid URL"
+                return
             }
-            return
+            if !isSafe {
+                validationError = "URL may not be safe"
+                return
+            }
+            if !hasValidExtension {
+                showInvalidExtensionAlert = true
+                return
+            }
         }
 
         await generateShortURLString(for: urlWithScheme)
