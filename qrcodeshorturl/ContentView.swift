@@ -27,6 +27,8 @@ struct ContentView: View {
     @FocusState private var isInputFocused: Bool // Use @FocusState for input focus
 
     @State private var keyboardHeight: CGFloat = 0
+    @State private var isGenerating: Bool = false
+    @State private var hideHeader: Bool = false
 
     private let urlService = URLService.shared
     private let urlValidationService = URLValidationService()
@@ -44,10 +46,9 @@ struct ContentView: View {
                 Spacer().frame(height: 20)
 
                 // Header View with animation
-                if !isInputFocused {
+                if !hideHeader {
                     headerView()
                         .transition(.move(edge: .top).combined(with: .opacity))
-                        .animation(.easeInOut(duration: 0.3), value: isInputFocused)
                 }
 
                 // Input Field
@@ -84,9 +85,9 @@ struct ContentView: View {
                     .padding()
                 }
             }
-            .padding(.top, isInputFocused ? 0 : 60) // Adjust padding based on focus
-            .animation(.easeInOut(duration: 0.3), value: isInputFocused)
+            .padding(.top, hideHeader ? 0 : 60)
         }
+        .animation(.easeInOut(duration: 0.3), value: hideHeader)
         .alert("Invalid Domain Extension", isPresented: $showInvalidExtensionAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Proceed Anyway") {
@@ -138,18 +139,24 @@ struct ContentView: View {
 
             TextField("https://example.com", text: $url)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
-                .focused($isInputFocused) // Bind to focus state
+                .focused($isInputFocused)
                 .autocapitalization(.none)
                 .disableAutocorrection(true)
                 .padding(.vertical, 8)
-                .padding(.horizontal, 4) // Add horizontal padding inside the border
+                .padding(.horizontal, 4)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(url.isEmpty ? Color.clear : Color.black, lineWidth: 2)
-                        .padding(.horizontal, -4) // Adjust the border to account for the padding
+                        .padding(.horizontal, -4)
                 )
+                .onSubmit {
+                    Task {
+                        hideHeader = true
+                        await generateBoth()
+                    }
+                }
         }
-        .padding(.horizontal, 20) // Add padding to the entire VStack
+        .padding(.horizontal, 20)
     }
 
     func actionButtonsView() -> some View {
@@ -359,7 +366,7 @@ struct ContentView: View {
         qrCodeImage = nil
         shortURL = ""
         validationError = nil
-        // Dismiss the keyboard if it's open
+        hideHeader = false  // Show the header again when clearing
         isInputFocused = false
     }
 
@@ -534,6 +541,38 @@ struct ContentView: View {
         Task {
             await generateQRCodeImage(for: shortURL)
             showQRCode = true
+        }
+    }
+
+    func generateBoth() async {
+        guard !url.isEmpty && !isGenerating else { return }
+        isGenerating = true
+        defer { isGenerating = false }
+
+        let urlWithScheme = url.lowercased().hasPrefix("http://") || url.lowercased().hasPrefix("https://") ? url : "https://" + url
+
+        let (isValid, isSafe, hasValidExtension) = await urlValidationService.validateURL(urlWithScheme)
+        if !isValid {
+            validationError = "Invalid URL"
+            return
+        }
+        if !isSafe {
+            validationError = "URL may not be safe"
+            return
+        }
+        if !hasValidExtension {
+            await MainActor.run {
+                showInvalidExtensionAlert = true
+            }
+            return
+        }
+
+        await generateQRCodeImage(for: urlWithScheme)
+        await generateShortURLString(for: urlWithScheme)
+        
+        // Ensure input is not focused
+        await MainActor.run {
+            isInputFocused = false
         }
     }
 }
