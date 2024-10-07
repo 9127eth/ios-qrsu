@@ -29,6 +29,7 @@ struct ContentView: View {
     @State private var keyboardHeight: CGFloat = 0
     @State private var isGenerating: Bool = false
     @State private var hideHeader: Bool = false
+    @State private var pendingAction: (() async -> Void)?
 
     private let urlService = URLService.shared
     private let urlValidationService = URLValidationService()
@@ -74,13 +75,14 @@ struct ContentView: View {
         }
         .animation(.easeInOut(duration: 0.3), value: hideHeader)
         .alert("Invalid Domain Extension", isPresented: $showInvalidExtensionAlert) {
-            Button("Cancel", role: .cancel) { }
+            Button("Cancel", role: .cancel) {
+                pendingAction = nil
+            }
             Button("Proceed Anyway") {
                 Task {
-                    if showQRCode {
-                        await generateQRCodeImage(for: url)
-                    } else {
-                        await generateShortURLString(for: url)
+                    if let action = pendingAction {
+                        await action()
+                        pendingAction = nil
                     }
                 }
             }
@@ -141,7 +143,7 @@ struct ContentView: View {
             Button("Get QR Code") {
                 Task {
                     hideHeader = true
-                    await generateQRCode()
+                    await handleURLValidation { await generateQRCode() }
                 }
             }
             .buttonStyle(BlackButtonStyle())
@@ -150,7 +152,7 @@ struct ContentView: View {
             Button("Get Short URL") {
                 Task {
                     hideHeader = true
-                    await generateShortURL()
+                    await handleURLValidation { await generateShortURL() }
                 }
             }
             .buttonStyle(WhiteButtonStyle())
@@ -227,7 +229,7 @@ struct ContentView: View {
                 .cornerRadius(8)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.gray, lineWidth: 1)
+                        .stroke(Color.black, lineWidth: 1)
                 )
             }
             .frame(maxWidth: 200) // Limit the width of the button
@@ -249,6 +251,7 @@ struct ContentView: View {
                     .cornerRadius(8)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 20) // Add horizontal padding to match the URL input
 
             HStack(spacing: 20) {
                 Button(action: {
@@ -276,12 +279,12 @@ struct ContentView: View {
                         .cornerRadius(8)
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.gray, lineWidth: 1)
+                                .stroke(Color.black, lineWidth: 1)
                         )
                 }
             }
         }
-        .padding()
+        .padding(.horizontal, 20) // Add horizontal padding to the entire VStack
     }
 
     // MARK: - Clear Button View
@@ -341,7 +344,7 @@ struct ContentView: View {
         isInputFocused = false
     }
 
-    func generateQRCode() async {
+    func handleURLValidation(action: @escaping () async -> Void) async {
         await MainActor.run {
             isValidating = true
             validationError = nil
@@ -367,12 +370,19 @@ struct ContentView: View {
                 return
             }
             if !hasValidExtension {
+                pendingAction = action
                 showInvalidExtensionAlert = true
                 return
             }
+            
+            Task {
+                await action()
+            }
         }
+    }
 
-        await generateQRCodeImage(for: urlWithScheme)
+    func generateQRCode() async {
+        await generateQRCodeImage(for: url)
     }
 
     func generateQRCodeImage(for urlString: String) {
@@ -396,37 +406,7 @@ struct ContentView: View {
     }
 
     func generateShortURL() async {
-        await MainActor.run {
-            isValidating = true
-            validationError = nil
-        }
-        
-        defer {
-            Task { @MainActor in
-                isValidating = false
-            }
-        }
-
-        let urlWithScheme = url.lowercased().hasPrefix("http://") || url.lowercased().hasPrefix("https://") ? url : "https://" + url
-
-        let (isValid, isSafe, hasValidExtension) = await urlValidationService.validateURL(urlWithScheme)
-        
-        await MainActor.run {
-            if !isValid {
-                validationError = "Invalid URL"
-                return
-            }
-            if !isSafe {
-                validationError = "URL may not be safe"
-                return
-            }
-            if !hasValidExtension {
-                showInvalidExtensionAlert = true
-                return
-            }
-        }
-
-        await generateShortURLString(for: urlWithScheme)
+        await generateShortURLString(for: url)
     }
 
     func generateShortURLString(for urlString: String) async {
@@ -437,28 +417,6 @@ struct ContentView: View {
         } catch {
             validationError = "Error shortening URL: \(error.localizedDescription)"
         }
-    }
-
-    func validateAndProcess(action: @escaping () async -> Void) async {
-        isValidating = true
-        validationError = nil
-
-        let (isValid, isSafe, hasValidExtension) = await urlValidationService.validateURL(url)
-
-        if !isValid {
-            validationError = "Invalid URL. Please enter a valid URL."
-        } else if !isSafe {
-            validationError = "This URL may be unsafe. Please try a different URL."
-        } else if !hasValidExtension {
-            // Show an alert to the user
-            await MainActor.run {
-                showInvalidExtensionAlert = true
-            }
-        } else {
-            await action()
-        }
-
-        isValidating = false
     }
 
     func shareQRCode() {
@@ -534,34 +492,14 @@ struct ContentView: View {
     }
 
     func generateBoth() async {
-        guard !url.isEmpty && !isGenerating else { return }
-        isGenerating = true
-        defer { isGenerating = false }
-
-        let urlWithScheme = url.lowercased().hasPrefix("http://") || url.lowercased().hasPrefix("https://") ? url : "https://" + url
-
-        let (isValid, isSafe, hasValidExtension) = await urlValidationService.validateURL(urlWithScheme)
-        if !isValid {
-            validationError = "Invalid URL"
-            return
-        }
-        if !isSafe {
-            validationError = "URL may not be safe"
-            return
-        }
-        if !hasValidExtension {
+        await handleURLValidation {
+            await generateQRCodeImage(for: url)
+            await generateShortURLString(for: url)
+            
+            // Ensure input is not focused
             await MainActor.run {
-                showInvalidExtensionAlert = true
+                isInputFocused = false
             }
-            return
-        }
-
-        await generateQRCodeImage(for: urlWithScheme)
-        await generateShortURLString(for: urlWithScheme)
-        
-        // Ensure input is not focused
-        await MainActor.run {
-            isInputFocused = false
         }
     }
 }
