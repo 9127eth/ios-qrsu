@@ -35,57 +35,42 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
-            Color.white
-                .edgesIgnoringSafeArea(.all)
-                .onTapGesture {
-                    // Dismiss the keyboard
-                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                }
-
-            VStack(spacing: 20) {
-                Spacer().frame(height: 20)
-
-                // Header View with animation
-                if !hideHeader {
-                    headerView()
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                }
-
-                // Input Field
-                urlInputView()
-                    .padding(.horizontal)
-
-                // Action Buttons
-                actionButtonsView()
-
-                // Validation Error
-                if let error = validationError {
-                    Text(error)
-                        .foregroundColor(.red)
-                        .font(.caption)
-                        .padding(.horizontal)
-                }
-
-                // QR Code and Short URL Views
-                ScrollView {
-                    VStack(spacing: 20) {
-                        if showQRCode {
-                            qrCodeView()
-                        }
-
-                        if showShortURL {
-                            shortURLView()
-                        }
-
-                        // Clear Button (only visible when QR code or short URL is present)
-                        if showQRCode || showShortURL {
-                            clearButtonView()
-                        }
+            Color.white.edgesIgnoringSafeArea(.all)
+            
+            ScrollView {
+                VStack(spacing: 20) {
+                    if !hideHeader {
+                        headerView()
+                            .transition(.move(edge: .top).combined(with: .opacity))
                     }
-                    .padding()
+                    
+                    urlInputView()
+                        .padding(.horizontal)
+                    
+                    actionButtonsView()
+                    
+                    if let error = validationError {
+                        Text(error)
+                            .foregroundColor(.red)
+                            .font(.caption)
+                            .padding(.horizontal)
+                    }
+                    
+                    if showQRCode {
+                        qrCodeView()
+                    }
+                    
+                    if showShortURL {
+                        shortURLView()
+                    }
+                    
+                    if showQRCode || showShortURL {
+                        clearButtonView()
+                    }
                 }
+                .padding(.top, hideHeader ? 0 : 60)
+                .padding(.bottom)
             }
-            .padding(.top, hideHeader ? 0 : 60)
         }
         .animation(.easeInOut(duration: 0.3), value: hideHeader)
         .alert("Invalid Domain Extension", isPresented: $showInvalidExtensionAlert) {
@@ -102,14 +87,6 @@ struct ContentView: View {
         } message: {
             Text("The domain extension you entered is not recognized. Do you want to proceed anyway?")
         }
-        .ignoresSafeArea(.keyboard) // Ignore the keyboard safe area
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { notification in
-            if let keyboardFrame: NSValue = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue {
-                let keyboardRectangle = keyboardFrame.cgRectValue
-                keyboardHeight = keyboardRectangle.height
-            }
-        }
-        .padding(.bottom, keyboardHeight) // Add padding to the bottom of the view
     }
 
     // MARK: - Views
@@ -241,23 +218,14 @@ struct ContentView: View {
                     Image(systemName: "square.and.arrow.up")
                     Text("Share")
                 }
-                .frame(width: 150)  // Keep the width the same
-                .padding(.vertical, 12)  // Keep the height the same
-                .background(Color.white)
-                .foregroundColor(.black)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(Color.black)
+                .foregroundColor(.white)
                 .cornerRadius(8)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.gray, lineWidth: 1)
-                )
             }
-            .frame(maxWidth: .infinity)  // This will allow the button to be centered
         }
-        .frame(maxWidth: .infinity)
         .padding()
-        .background(Color.white)
-        .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
     }
 
     // MARK: - Short URL View
@@ -270,12 +238,8 @@ struct ContentView: View {
             HStack(spacing: 10) {
                 Text(shortURL)
                     .padding(8)
-                    .background(Color.white)
+                    .background(Color.gray.opacity(0.1))
                     .cornerRadius(8)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.gray, lineWidth: 1)
-                    )
 
                 Button(action: {
                     shareShortURL()
@@ -286,7 +250,6 @@ struct ContentView: View {
                     }
                     .padding(.vertical, 8)
                     .padding(.horizontal, 16)
-                    .frame(height: 36) // Set a fixed height
                     .background(Color.black)
                     .foregroundColor(.white)
                     .cornerRadius(8)
@@ -296,21 +259,14 @@ struct ContentView: View {
                     generateQRCodeForShortURL()
                 }) {
                     Image(systemName: "qrcode")
-                        .foregroundColor(.black)
-                        .frame(width: 36, height: 36) // Make it square and match the height of the share button
-                        .background(Color.white)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.gray, lineWidth: 1)
-                        )
+                        .foregroundColor(.white)
+                        .frame(width: 36, height: 36)
+                        .background(Color.black)
+                        .cornerRadius(8)
                 }
             }
         }
-        .frame(maxWidth: .infinity)
         .padding()
-        .background(Color.white)
-        .cornerRadius(12)
-        .shadow(radius: 5)
     }
 
     // MARK: - Clear Button View
