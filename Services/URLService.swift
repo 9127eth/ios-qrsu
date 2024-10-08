@@ -8,6 +8,7 @@
 import Foundation
 import FirebaseFirestore
 import CoreImage.CIFilterBuiltins
+import UIKit
 
 class URLService {
     static let shared = URLService()
@@ -30,7 +31,7 @@ class URLService {
         return "https://\(shortURLDomain)/\(shortCode)"
     }
     
-    func generateQRCode(for url: String, size: CGSize, format: String, transparent: Bool) -> UIImage? {
+    func generateQRCode(for url: String, size: CGSize, format: String, transparent: Bool) -> Any? {
         guard let filter = CIFilter(name: "CIQRCodeGenerator") else { return nil }
         
         let data = url.data(using: .ascii, allowLossyConversion: false)
@@ -41,66 +42,80 @@ class URLService {
         let transform = CGAffineTransform(scaleX: size.width / ciImage.extent.size.width, y: size.height / ciImage.extent.size.height)
         let scaledCIImage = ciImage.transformed(by: transform)
         
-        let context = CIContext()
-        guard let cgImage = context.createCGImage(scaledCIImage, from: scaledCIImage.extent) else { return nil }
-        
-        let format = format.lowercased()
-        let alphaInfo: CGImageAlphaInfo = transparent ? .premultipliedLast : .noneSkipLast
-        
-        guard let colorSpace = CGColorSpace(name: CGColorSpace.sRGB) else { return nil }
-        guard let bitmapContext = CGContext(data: nil,
-                                            width: Int(size.width),
-                                            height: Int(size.height),
-                                            bitsPerComponent: 8,
-                                            bytesPerRow: 0,
-                                            space: colorSpace,
-                                            bitmapInfo: alphaInfo.rawValue) else { return nil }
-        
-        bitmapContext.interpolationQuality = .none
-        bitmapContext.draw(cgImage, in: CGRect(origin: .zero, size: size))
-        
-        guard let outputCGImage = bitmapContext.makeImage() else { return nil }
-        
-        let outputImage = UIImage(cgImage: outputCGImage)
-        
-        if format == "svg" {
-            // SVG generation is not natively supported in iOS
-            // You would need to use a third-party library or implement custom SVG generation
-            print("SVG format is not supported in this implementation")
-            return outputImage
+        switch format.lowercased() {
+        case "png":
+            return generatePNGQRCode(from: scaledCIImage, size: size, transparent: transparent)
+        case "jpeg":
+            return generateJPEGQRCode(from: scaledCIImage, size: size)
+        case "svg":
+            return generateSVGQRCode(from: scaledCIImage, size: size)
+        default:
+            return nil
         }
-        
-        return outputImage
     }
     
-    func generateSVGQRCode(for url: String, size: CGFloat) -> String? {
-        guard let filter = CIFilter(name: "CIQRCodeGenerator") else { return nil }
-        let data = url.data(using: .ascii, allowLossyConversion: false)
-        filter.setValue(data, forKey: "inputMessage")
-        
-        guard let ciImage = filter.outputImage else { return nil }
-        
+    private func generatePNGQRCode(from ciImage: CIImage, size: CGSize, transparent: Bool) -> Data? {
         let context = CIContext()
         guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else { return nil }
         
-        let svgSize = Int(size)
-        let scale = svgSize / Int(ciImage.extent.width)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        
+        let renderer = UIGraphicsImageRenderer(size: size, format: format)
+        
+        let imageData = renderer.pngData { context in
+            if !transparent {
+                UIColor.white.setFill()
+                context.fill(CGRect(origin: .zero, size: size))
+            }
+            
+            context.cgContext.interpolationQuality = .none
+            context.cgContext.draw(cgImage, in: CGRect(origin: .zero, size: size))
+        }
+        
+        return imageData
+    }
+    
+    private func generateJPEGQRCode(from ciImage: CIImage, size: CGSize) -> Data? {
+        let context = CIContext()
+        guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else { return nil }
+        
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        
+        let renderer = UIGraphicsImageRenderer(size: size, format: format)
+        
+        let imageData = renderer.jpegData(withCompressionQuality: 0.8) { context in
+            UIColor.white.setFill()
+            context.fill(CGRect(origin: .zero, size: size))
+            
+            context.cgContext.interpolationQuality = .none
+            context.cgContext.draw(cgImage, in: CGRect(origin: .zero, size: size))
+        }
+        
+        return imageData
+    }
+    
+    private func generateSVGQRCode(from ciImage: CIImage, size: CGSize) -> String {
+        let context = CIContext()
+        guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else { return "" }
+        
+        let width = Int(size.width)
+        let height = Int(size.height)
         
         var svg = """
-        <svg width="\(svgSize)" height="\(svgSize)" viewBox="0 0 \(svgSize) \(svgSize)" xmlns="http://www.w3.org/2000/svg">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 \(width) \(height)" width="\(width)" height="\(height)">
         <rect width="100%" height="100%" fill="white"/>
         """
         
-        for y in 0..<Int(ciImage.extent.height) {
-            for x in 0..<Int(ciImage.extent.width) {
-                let pixelData = cgImage.dataProvider!.data!
-                let data: UnsafePointer<UInt8> = CFDataGetBytePtr(pixelData)
-                let pixelInfo: Int = ((Int(cgImage.width) * y) + x) * 4
-                
-                if data[pixelInfo] == 0 {
-                    let rectX = x * scale
-                    let rectY = y * scale
-                    svg += "<rect x='\(rectX)' y='\(rectY)' width='\(scale)' height='\(scale)' fill='black'/>"
+        for y in 0..<cgImage.height {
+            for x in 0..<cgImage.width {
+                if let pixel = cgImage.pixel(at: CGPoint(x: x, y: y)), pixel.isBlack {
+                    let rectX = x * Int(size.width) / cgImage.width
+                    let rectY = y * Int(size.height) / cgImage.height
+                    let rectWidth = Int(size.width) / cgImage.width
+                    let rectHeight = Int(size.height) / cgImage.height
+                    svg += "<rect x='\(rectX)' y='\(rectY)' width='\(rectWidth)' height='\(rectHeight)' fill='black'/>"
                 }
             }
         }
@@ -112,5 +127,31 @@ class URLService {
     private func generateShortCode() -> String {
         let characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
         return String((0..<5).map { _ in characters.randomElement()! })
+    }
+}
+
+extension CGImage {
+    func pixel(at point: CGPoint) -> Pixel? {
+        guard let pixelData = dataProvider?.data,
+              let data = CFDataGetBytePtr(pixelData) else { return nil }
+        
+        let pixelInfo = (Int(point.y) * bytesPerRow) + (Int(point.x) * bitsPerPixel / 8)
+        let r = data[pixelInfo]
+        let g = data[pixelInfo + 1]
+        let b = data[pixelInfo + 2]
+        let a = data[pixelInfo + 3]
+        
+        return Pixel(r: r, g: g, b: b, a: a)
+    }
+}
+
+struct Pixel {
+    let r: UInt8
+    let g: UInt8
+    let b: UInt8
+    let a: UInt8
+    
+    var isBlack: Bool {
+        return r == 0 && g == 0 && b == 0
     }
 }

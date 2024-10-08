@@ -399,24 +399,28 @@ struct ContentView: View {
     }
 
     func generateQRCode() async {
-        await generateQRCodeImage(for: url)
+        await generateQRCodeImage(for: url, format: selectedFormat)
     }
 
-    func generateQRCodeImage(for urlString: String) {
-        // Always generate PNG for display
-        qrCodeImage = urlService.generateQRCode(for: urlString, size: CGSize(width: 200, height: 200), format: "png", transparent: transparentBackground)
-
-        // Generate SVG data if selected
-        if selectedFormat == "svg" {
-            svgData = urlService.generateSVGQRCode(for: urlString, size: 200)
-        } else {
-            svgData = nil
+    func generateQRCodeImage(for urlString: String, format: String) {
+        if let qrCodeData = urlService.generateQRCode(for: urlString, size: CGSize(width: 200, height: 200), format: format, transparent: transparentBackground) {
+            switch format {
+            case "png", "jpeg":
+                if let data = qrCodeData as? Data, let image = UIImage(data: data) {
+                    qrCodeImage = image
+                }
+            case "svg":
+                if let svgString = qrCodeData as? String {
+                    svgData = svgString
+                }
+            default:
+                break
+            }
         }
 
         showQRCode = true
         validationError = nil
         
-        // If the URL is a short URL, update the url state
         if urlString.starts(with: "https://\(urlService.shortURLDomain)") {
             url = urlString
         }
@@ -437,10 +441,30 @@ struct ContentView: View {
     }
 
     func shareQRCode() {
-        guard let qrImage = qrCodeImage else { return }
+        var itemToShare: Any
+
+        switch selectedFormat {
+        case "svg":
+            if let svgData = svgData {
+                itemToShare = svgData
+            } else {
+                print("No SVG data to share")
+                return
+            }
+        case "jpeg", "png":
+            if let qrImage = qrCodeImage, let imageData = selectedFormat == "png" ? qrImage.pngData() : qrImage.jpegData(compressionQuality: 0.8) {
+                itemToShare = imageData
+            } else {
+                print("No QR code image data to share")
+                return
+            }
+        default:
+            print("Unsupported format")
+            return
+        }
         
         let activityViewController = UIActivityViewController(
-            activityItems: [qrImage],
+            activityItems: [itemToShare],
             applicationActivities: nil
         )
         
@@ -503,14 +527,14 @@ struct ContentView: View {
 
     func generateQRCodeForShortURL() {
         Task {
-            await generateQRCodeImage(for: shortURL)
+            await generateQRCodeImage(for: shortURL, format: selectedFormat)
             showQRCode = true
         }
     }
 
     func generateBoth() async {
         await handleURLValidation {
-            await generateQRCodeImage(for: url)
+            await generateQRCodeImage(for: url, format: selectedFormat)
             await generateShortURLString(for: url)
             
             // Ensure input is not focused
