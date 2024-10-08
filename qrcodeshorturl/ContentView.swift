@@ -24,7 +24,8 @@ struct ContentView: View {
     @State private var selectedFormat: String = "png"
     @State private var transparentBackground: Bool = false
     @State private var svgData: String? = nil
-    @FocusState private var isInputFocused: Bool // Use @FocusState for input focus
+    @FocusState private var isInputFocused: Bool
+    @GestureState private var dragOffset = CGSize.zero
 
     @State private var keyboardHeight: CGFloat = 0
     @State private var isGenerating: Bool = false
@@ -72,8 +73,24 @@ struct ContentView: View {
                 .padding(.top, hideHeader ? 0 : 60)
                 .padding(.bottom)
             }
+            .gesture(
+                DragGesture()
+                    .updating($dragOffset) { value, state, _ in
+                        if value.translation.height > 0 && isInputFocused {
+                            state = value.translation
+                        }
+                    }
+                    .onEnded { value in
+                        if value.translation.height > 50 {
+                            isInputFocused = false
+                        }
+                    }
+            )
         }
         .animation(.easeInOut(duration: 0.3), value: hideHeader)
+        .onTapGesture {
+            isInputFocused = false
+        }
         .alert("Invalid Domain Extension", isPresented: $showInvalidExtensionAlert) {
             Button("Cancel", role: .cancel) {
                 pendingAction = nil
