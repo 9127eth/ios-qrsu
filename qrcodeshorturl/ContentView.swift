@@ -181,7 +181,7 @@ struct ContentView: View {
             Button("Get QR Code") {
                 Task {
                     hideHeader = true
-                    await handleURLValidation { await generateQRCode() }
+                    await handleURLValidation { generateQRCode() }
                 }
             }
             .buttonStyle(BlackButtonStyle())
@@ -225,9 +225,9 @@ struct ContentView: View {
                     Text("SVG").tag("svg")
                 }
                 .pickerStyle(SegmentedPickerStyle())
-                .onChange(of: selectedFormat) { newValue in
+                .onChange(of: selectedFormat) { oldValue, newValue in
                     Task {
-                        await generateQRCode()
+                        generateQRCode()
                     }
                 }
             }
@@ -416,8 +416,8 @@ struct ContentView: View {
         }
     }
 
-    func generateQRCode() async {
-        await generateQRCodeImage(for: url, format: selectedFormat)
+    func generateQRCode() {
+        generateQRCodeImage(for: url, format: selectedFormat)
     }
 
     func generateQRCodeImage(for urlString: String, format: String) {
@@ -545,14 +545,14 @@ struct ContentView: View {
 
     func generateQRCodeForShortURL() {
         Task {
-            await generateQRCodeImage(for: shortURL, format: selectedFormat)
+            generateQRCodeImage(for: shortURL, format: selectedFormat)
             showQRCode = true
         }
     }
 
     func generateBoth() async {
         await handleURLValidation {
-            await generateQRCodeImage(for: url, format: selectedFormat)
+            generateQRCodeImage(for: url, format: selectedFormat)
             await generateShortURLString(for: url)
             
             // Ensure input is not focused
