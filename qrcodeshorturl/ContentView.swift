@@ -194,38 +194,17 @@ struct ContentView: View {
                     .background(Color.gray.opacity(0.2))
             }
 
-            VStack(spacing: 15) {
-                HStack {
-                    Text("Format:")
-                        .font(.subheadline)
-                        .foregroundColor(.black)
-                    Picker("Format", selection: $selectedFormat) {
-                        Text("PNG").tag("png")
-                        Text("JPEG").tag("jpeg")
-                        Text("SVG").tag("svg")
-                    }
-                    .pickerStyle(SegmentedPickerStyle())
-                    .onChange(of: selectedFormat) { newValue in
-                        if newValue == "jpeg" {
-                            transparentBackground = false
-                        }
-                        Task {
-                            await generateQRCode()
-                        }
-                    }
+            HStack {
+                Text("Format:")
+                    .font(.subheadline)
+                    .foregroundColor(.black)
+                Picker("Format", selection: $selectedFormat) {
+                    Text("PNG").tag("png")
+                    Text("JPEG").tag("jpeg")
+                    Text("SVG").tag("svg")
                 }
-
-                Toggle(isOn: $transparentBackground) {
-                    Text("Transparent Background")
-                        .font(.subheadline)
-                        .foregroundColor(.black)
-                }
-                .toggleStyle(SwitchToggleStyle(tint: .blue))
-                .disabled(selectedFormat == "jpeg")
-                .onChange(of: transparentBackground) { _ in
-                    if transparentBackground && selectedFormat == "jpeg" {
-                        selectedFormat = "png"
-                    }
+                .pickerStyle(SegmentedPickerStyle())
+                .onChange(of: selectedFormat) { newValue in
                     Task {
                         await generateQRCode()
                     }
@@ -403,7 +382,7 @@ struct ContentView: View {
     }
 
     func generateQRCodeImage(for urlString: String, format: String) {
-        if let qrCodeData = urlService.generateQRCode(for: urlString, size: CGSize(width: 200, height: 200), format: format, transparent: transparentBackground) {
+        if let qrCodeData = urlService.generateQRCode(for: urlString, size: CGSize(width: 200, height: 200), format: format) {
             switch format {
             case "png", "jpeg":
                 if let data = qrCodeData as? Data, let image = UIImage(data: data) {

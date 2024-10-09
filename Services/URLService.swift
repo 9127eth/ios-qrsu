@@ -31,7 +31,7 @@ class URLService {
         return "https://\(shortURLDomain)/\(shortCode)"
     }
     
-    func generateQRCode(for url: String, size: CGSize, format: String, transparent: Bool) -> Any? {
+    func generateQRCode(for url: String, size: CGSize, format: String) -> Any? {
         guard let filter = CIFilter(name: "CIQRCodeGenerator") else { return nil }
         
         let data = url.data(using: .ascii, allowLossyConversion: false)
@@ -44,7 +44,7 @@ class URLService {
         
         switch format.lowercased() {
         case "png":
-            return generatePNGQRCode(from: scaledCIImage, size: size, transparent: transparent)
+            return generatePNGQRCode(from: scaledCIImage, size: size)
         case "jpeg":
             return generateJPEGQRCode(from: scaledCIImage, size: size)
         case "svg":
@@ -54,7 +54,7 @@ class URLService {
         }
     }
     
-    private func generatePNGQRCode(from ciImage: CIImage, size: CGSize, transparent: Bool) -> Data? {
+    private func generatePNGQRCode(from ciImage: CIImage, size: CGSize) -> Data? {
         let context = CIContext()
         guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else { return nil }
         
@@ -64,10 +64,8 @@ class URLService {
         let renderer = UIGraphicsImageRenderer(size: size, format: format)
         
         let imageData = renderer.pngData { context in
-            if !transparent {
-                UIColor.white.setFill()
-                context.fill(CGRect(origin: .zero, size: size))
-            }
+            UIColor.white.setFill()
+            context.fill(CGRect(origin: .zero, size: size))
             
             context.cgContext.interpolationQuality = .none
             context.cgContext.draw(cgImage, in: CGRect(origin: .zero, size: size))
