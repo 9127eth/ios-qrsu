@@ -383,6 +383,7 @@ struct ContentView: View {
         await MainActor.run {
             isValidating = true
             validationError = nil
+            isInputFocused = false  // Add this line to dismiss the keyboard
         }
         
         defer {
