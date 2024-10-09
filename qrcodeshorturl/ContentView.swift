@@ -12,6 +12,24 @@ import WebKit
 import Photos
 import PhotosUI
 
+struct ReadOnlyTextView: UIViewRepresentable {
+    let text: String
+
+    func makeUIView(context: Context) -> UITextView {
+        let textView = UITextView()
+        textView.isEditable = false
+        textView.isSelectable = true
+        textView.isScrollEnabled = false
+        textView.backgroundColor = .clear
+        textView.font = UIFont.systemFont(ofSize: 16)
+        return textView
+    }
+
+    func updateUIView(_ uiView: UITextView, context: Context) {
+        uiView.text = text
+    }
+}
+
 struct ContentView: View {
     @State private var url: String = ""
     @State private var showQRCode: Bool = false
@@ -145,6 +163,9 @@ struct ContentView: View {
                         .stroke(url.isEmpty ? Color.clear : Color.black, lineWidth: 2)
                         .padding(.horizontal, -4)
                 )
+                .foregroundColor(.primary)
+                .accentColor(.primary)
+                .modifier(PlaceholderStyle(showPlaceHolder: url.isEmpty, placeholder: "https://example.com"))
                 .onSubmit {
                     Task {
                         hideHeader = true
@@ -241,13 +262,14 @@ struct ContentView: View {
                 Text("Short URL:")
                     .font(.headline)
 
-                Text(shortURL)
+                ReadOnlyTextView(text: shortURL)
+                    .frame(height: 40)
                     .padding(8)
                     .background(Color.gray.opacity(0.1))
                     .cornerRadius(8)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 20) // Add horizontal padding to match the URL input
+            .padding(.horizontal, 20)
 
             HStack(spacing: 20) {
                 Button(action: {
@@ -280,7 +302,7 @@ struct ContentView: View {
                 }
             }
         }
-        .padding(.horizontal, 20) // Add horizontal padding to the entire VStack
+        .padding(.horizontal, 20)
     }
 
     // MARK: - Clear Button View
@@ -324,6 +346,23 @@ struct ContentView: View {
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(Color.gray, lineWidth: 1)
                 )
+        }
+    }
+
+    // Add this struct at the bottom of your ContentView struct
+    struct PlaceholderStyle: ViewModifier {
+        var showPlaceHolder: Bool
+        var placeholder: String
+
+        func body(content: Content) -> some View {
+            ZStack(alignment: .leading) {
+                if showPlaceHolder {
+                    Text(placeholder)
+                        .foregroundColor(.gray)
+                        .padding(.horizontal, 4)
+                }
+                content
+            }
         }
     }
 
