@@ -19,15 +19,12 @@ struct qrcodeshorturlApp: App {
                 
                 if isShowingSplash {
                     SplashScreenView()
-                        .transition(.opacity)
-                        .animation(.easeOut(duration: 0.5), value: isShowingSplash)
+                        .zIndex(1)
                 }
             }
             .onAppear {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                    withAnimation {
-                        isShowingSplash = false
-                    }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    isShowingSplash = false
                 }
             }
         }
