@@ -19,12 +19,12 @@ class URLService {
         self.shortURLDomain = ProcessInfo.processInfo.environment["SHORT_URL_DOMAIN"] ?? "qrsu.io"
     }
     
-    func shortenURL(_ longURL: String) async throws -> String {
+    func shortenURL(_ longURL: String, isSafe: Bool) async throws -> String {
         let shortCode = generateShortCode()
         let data: [String: Any] = [
-            "longURL": longURL,
-            "shortCode": shortCode,
-            "createdAt": FieldValue.serverTimestamp()
+            "longUrl": longURL,
+            "createdAt": FieldValue.serverTimestamp(),
+            "isSafe": isSafe
         ]
         
         try await db.collection("urls").document(shortCode).setData(data)

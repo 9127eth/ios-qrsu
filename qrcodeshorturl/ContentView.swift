@@ -451,7 +451,8 @@ struct ContentView: View {
 
     func generateShortURLString(for urlString: String) async {
         do {
-            shortURL = try await urlService.shortenURL(urlString)
+            let (_, isSafe, _) = await urlValidationService.validateURL(urlString)
+            shortURL = try await urlService.shortenURL(urlString, isSafe: isSafe)
             showShortURL = true
             validationError = nil
         } catch {
@@ -558,7 +559,7 @@ struct ContentView: View {
             
             // Ensure input is not focused
             await MainActor.run {
-                isInputFocused = false
+                isInputFocused = false  // Ensure keyboard is dismissed
             }
         }
     }
