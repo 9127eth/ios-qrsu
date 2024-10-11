@@ -16,15 +16,20 @@ struct qrcodeshorturlApp: App {
         WindowGroup {
             ZStack {
                 ContentView()
+                    .opacity(isShowingSplash ? 0 : 1)
                 
                 if isShowingSplash {
                     SplashScreenView()
+                        .transition(.opacity)
                         .zIndex(1)
                 }
             }
+            .animation(.easeInOut(duration: 0.5), value: isShowingSplash)
             .onAppear {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                    isShowingSplash = false
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    withAnimation {
+                        isShowingSplash = false
+                    }
                 }
             }
         }
