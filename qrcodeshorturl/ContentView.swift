@@ -50,6 +50,8 @@ struct ContentView: View {
     @State private var hideHeader: Bool = false
     @State private var pendingAction: (() async -> Void)?
 
+    @State private var copySuccess: Bool = false
+
     private let urlService = URLService.shared
     private let urlValidationService = URLValidationService()
 
@@ -262,11 +264,38 @@ struct ContentView: View {
                 Text("Short URL:")
                     .font(.headline)
 
-                ReadOnlyTextView(text: shortURL)
-                    .frame(height: 40)
-                    .padding(8)
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(8)
+                HStack {
+                    ReadOnlyTextView(text: shortURL)
+                        .frame(height: 40)
+                        .padding(8)
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(8)
+
+                    Button(action: {
+                        UIPasteboard.general.string = shortURL
+                        copySuccess = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            copySuccess = false
+                        }
+                    }) {
+                        ZStack {
+                            Image(systemName: "doc.on.doc")
+                                .foregroundColor(.black)
+                                .opacity(copySuccess ? 0 : 1)
+                            Text("✓")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(.green)
+                                .opacity(copySuccess ? 1 : 0)
+                        }
+                        .frame(width: 44, height: 44)
+                        .background(Color.white)
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.black, lineWidth: 1)
+                        )
+                    }
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 20)
