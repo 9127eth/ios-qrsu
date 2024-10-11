@@ -20,14 +20,27 @@ class URLService {
     }
     
     func shortenURL(_ longURL: String, isSafe: Bool) async throws -> String {
-        let shortCode = generateShortCode()
-        let data: [String: Any] = [
-            "longUrl": longURL,
-            "createdAt": FieldValue.serverTimestamp(),
-            "isSafe": isSafe
-        ]
+        var shortCode = generateShortCode()
+        var isUnique = false
         
-        try await db.collection("urls").document(shortCode).setData(data)
+        while !isUnique {
+            let docRef = db.collection("urls").document(shortCode)
+            let docSnapshot = try await docRef.getDocument()
+            
+            if !docSnapshot.exists {
+                isUnique = true
+                let data: [String: Any] = [
+                    "longUrl": longURL,
+                    "createdAt": FieldValue.serverTimestamp(),
+                    "isSafe": isSafe
+                ]
+                try await docRef.setData(data)
+            } else {
+                // If the document exists, generate a new short code
+                shortCode = generateShortCode()
+            }
+        }
+        
         return "https://\(shortURLDomain)/\(shortCode)"
     }
     
