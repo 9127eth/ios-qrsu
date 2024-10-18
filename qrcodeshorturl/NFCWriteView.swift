@@ -19,19 +19,13 @@ struct NFCWriteView: View {
                 Text("Select NFC Content Type")
                     .font(.headline)
                 
-                Button(action: { selectedType = .link }) {
-                    Text("Link")
-                        .frame(maxWidth: 200)
-                        .padding(.vertical, 12)
-                        .background(selectedType == .link ? Color.blue : Color.gray)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
-                }
+                NFCTypeButton(type: .link, selectedType: $selectedType, label: "Link")
+                    .frame(maxWidth: 300)
                 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 15) {
                     NFCTypeButton(type: .text, selectedType: $selectedType, label: "Plain Text")
                     NFCTypeButton(type: .wifi, selectedType: $selectedType)
-                    NFCTypeButton(type: .sms, selectedType: $selectedType)
+                    NFCTypeButton(type: .sms, selectedType: $selectedType, label: "SMS")
                     NFCTypeButton(type: .email, selectedType: $selectedType)
                 }
                 .frame(maxWidth: 300)
@@ -87,9 +81,13 @@ struct NFCTypeButton: View {
             Text(label ?? type.rawValue.capitalized)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
-                .background(selectedType == type ? Color.blue : Color.gray)
-                .foregroundColor(.white)
+                .background(selectedType == type ? Color.black : Color.white)
+                .foregroundColor(selectedType == type ? Color.white : Color.black)
                 .cornerRadius(8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.black, lineWidth: 1)
+                )
         }
     }
 }
@@ -98,7 +96,21 @@ enum NFCContentType: String {
     case link, text, wifi, sms, email
 }
 
-// Placeholder views for different input types
+// Common button modifier
+extension View {
+    func nfcWriteButtonStyle() -> some View {
+        self.frame(height: 44) // Set a specific height
+            .padding(.horizontal)
+            .background(Color.black)
+            .foregroundColor(.white)
+            .cornerRadius(8)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.black, lineWidth: 1)
+            )
+    }
+}
+
 struct LinkInputView: View {
     @State private var url = ""
     @State private var isValidating = false
@@ -124,12 +136,11 @@ struct LinkInputView: View {
                     await validateAndWriteURL()
                 }
             }
-            .padding()
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(10)
+            .nfcWriteButtonStyle()
+            .padding(.top, 20)
             .disabled(url.isEmpty || isValidating)
         }
+        .padding(.bottom, 20)
         .alert("Invalid Domain Extension", isPresented: $showInvalidExtensionAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Proceed Anyway") {
@@ -187,11 +198,10 @@ struct TextInputView: View {
                     writeAction(payload)
                 }
             }
-            .padding()
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(10)
+            .nfcWriteButtonStyle()
+            .padding(.top, 20)
         }
+        .padding(.bottom, 20)
     }
 }
 
@@ -223,11 +233,10 @@ struct WifiInputView: View {
                     writeAction(payload)
                 }
             }
-            .padding()
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(10)
+            .nfcWriteButtonStyle()
+            .padding(.top, 20)
         }
+        .padding(.bottom, 20)
     }
 }
 
@@ -250,11 +259,10 @@ struct SMSInputView: View {
                     writeAction(payload)
                 }
             }
-            .padding()
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(10)
+            .nfcWriteButtonStyle()
+            .padding(.top, 20)
         }
+        .padding(.bottom, 20)
     }
 }
 
@@ -280,11 +288,10 @@ struct EmailInputView: View {
                     writeAction(payload)
                 }
             }
-            .padding()
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(10)
+            .nfcWriteButtonStyle()
+            .padding(.top, 20)
         }
+        .padding(.bottom, 20)
     }
 }
 
