@@ -126,6 +126,11 @@ struct ContentView: View {
         } message: {
             Text("The domain extension you entered is not recognized. Do you want to proceed anyway?")
         }
+        NavigationLink("NFC Tools") {
+            NFCWriteView()
+        }
+        .foregroundColor(.blue)
+        .padding(.top, 20)
     }
 
     // MARK: - Views

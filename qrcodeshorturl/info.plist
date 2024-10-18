@@ -30,6 +30,7 @@
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
 		<string>armv7</string>
+		<string>nfc</string>
 	</array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
@@ -48,5 +49,12 @@
 	<string>This app needs access to your photo library to save QR codes.</string>
 	<key>CFBundleIconName</key>
 	<string>AppIcon</string>
+	<key>NFCReaderUsageDescription</key>
+	<string>This app uses NFC to read and write tags.</string>
+	<key>com.apple.developer.nfc.readersession.formats</key>
+	<array>
+		<string>NDEF</string>
+		<string>TAG</string>
+	</array>
 </dict>
 </plist>

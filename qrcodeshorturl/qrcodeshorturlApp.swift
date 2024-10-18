@@ -15,7 +15,7 @@ struct qrcodeshorturlApp: App {
     var body: some Scene {
         WindowGroup {
             ZStack {
-                ContentView()
+                MainTabView()
                     .opacity(isShowingSplash ? 0 : 1)
                 
                 if isShowingSplash {
@@ -31,6 +31,28 @@ struct qrcodeshorturlApp: App {
                         isShowingSplash = false
                     }
                 }
+            }
+        }
+    }
+}
+
+struct MainTabView: View {
+    var body: some View {
+        TabView {
+            NavigationView {
+                ContentView()
+                    .navigationTitle("Home")
+            }
+            .tabItem {
+                Label("Home", systemImage: "house")
+            }
+            
+            NavigationView {
+                NFCWriteView()
+                    .navigationTitle("NFC Tools")
+            }
+            .tabItem {
+                Label("NFC Tools", systemImage: "wave.3.right")
             }
         }
     }
