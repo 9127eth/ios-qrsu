@@ -12,6 +12,8 @@ struct NFCWriteView: View {
     @State private var selectedType: NFCContentType = .link
     @State private var showAlert = false
     @State private var alertMessage = ""
+    @State private var nfcWriter: NFCWriter?
+    @State private var nfcSession: NFCNDEFReaderSession?
 
     var body: some View {
         ScrollView {
@@ -59,15 +61,23 @@ struct NFCWriteView: View {
         }
     }
     
-    func writeNFC(payload: NFCNDEFPayload) {
+    func writeNFC(payload: NFCNDEFPayload?) {
         guard NFCNDEFReaderSession.readingAvailable else {
             alertMessage = "NFC is not available on this device"
             showAlert = true
             return
         }
         
-        let session = NFCNDEFReaderSession(delegate: NFCWriter(payload: payload, alertMessage: $alertMessage, showAlert: $showAlert), queue: nil, invalidateAfterFirstRead: false)
-        session.begin()
+        guard let payload = payload else {
+            alertMessage = "Failed to create NFC payload"
+            showAlert = true
+            return
+        }
+        
+        nfcWriter = NFCWriter(payload: payload, alertMessage: $alertMessage, showAlert: $showAlert)
+        nfcSession = NFCNDEFReaderSession(delegate: nfcWriter!, queue: nil, invalidateAfterFirstRead: false)
+        nfcSession?.alertMessage = "Hold your iPhone near an NFC tag to write the data."
+        nfcSession?.begin()
     }
 }
 
@@ -309,6 +319,11 @@ class NFCWriter: NSObject, NFCNDEFReaderSessionDelegate {
     
     func readerSession(_ session: NFCNDEFReaderSession, didInvalidateWithError error: Error) {
         DispatchQueue.main.async {
+            if let nfcError = error as? NFCReaderError,
+               nfcError.code == .readerSessionInvalidationErrorUserCanceled {
+                // User canceled the NFC session, no need to show an alert
+                return
+            }
             self.alertMessage = "Error: \(error.localizedDescription)"
             self.showAlert = true
         }
