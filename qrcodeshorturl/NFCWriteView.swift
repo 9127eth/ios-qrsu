@@ -18,6 +18,13 @@ struct NFCWriteView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
+                Text("The greatest NFC Tools ever made.")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 40)
+                    .padding(.bottom, 20)
+
                 Text("Select NFC Content Type")
                     .font(.headline)
                 
@@ -55,7 +62,6 @@ struct NFCWriteView: View {
                     hideKeyboard()
                 }
         )
-        .navigationTitle("Write to NFC")
         .alert(isPresented: $showAlert) {
             Alert(title: Text("NFC Write"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
         }
@@ -89,6 +95,7 @@ struct NFCTypeButton: View {
     var body: some View {
         Button(action: { selectedType = type }) {
             Text(label ?? type.rawValue.capitalized)
+                .fontWeight(.bold)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
                 .background(selectedType == type ? Color.black : Color.white)
@@ -96,7 +103,7 @@ struct NFCTypeButton: View {
                 .cornerRadius(8)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.black, lineWidth: 1)
+                        .stroke(Color.gray, lineWidth: 1)
                 )
         }
     }
@@ -113,6 +120,7 @@ extension View {
             .padding(.horizontal)
             .background(Color.black)
             .foregroundColor(.white)
+            .fontWeight(.bold)
             .cornerRadius(8)
             .overlay(
                 RoundedRectangle(cornerRadius: 8)

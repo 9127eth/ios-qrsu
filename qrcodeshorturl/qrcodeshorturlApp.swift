@@ -41,7 +41,7 @@ struct MainTabView: View {
         TabView {
             NavigationView {
                 ContentView()
-                    .navigationTitle("Home")
+                    .navigationBarHidden(true)
             }
             .tabItem {
                 Label("Home", systemImage: "house")
@@ -49,11 +49,12 @@ struct MainTabView: View {
             
             NavigationView {
                 NFCWriteView()
-                    .navigationTitle("NFC Tools")
+                    .navigationBarHidden(true)
             }
             .tabItem {
                 Label("NFC Tools", systemImage: "wave.3.right")
             }
         }
+        .accentColor(.black) // This changes the selected tab color to black
     }
 }
