@@ -14,6 +14,7 @@ struct NFCWriteView: View {
     @State private var alertMessage = ""
     @State private var nfcWriter: NFCWriter?
     @State private var nfcSession: NFCNDEFReaderSession?
+    @State private var showWriteOptions = false
 
     var body: some View {
         ScrollView {
@@ -25,33 +26,55 @@ struct NFCWriteView: View {
                     .padding(.top, 40)
                     .padding(.bottom, 20)
 
-                Text("Select NFC Content Type")
-                    .font(.headline)
-                
-                NFCTypeButton(type: .link, selectedType: $selectedType, label: "Link")
-                    .frame(maxWidth: 300)
-                
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 15) {
-                    NFCTypeButton(type: .text, selectedType: $selectedType, label: "Plain Text")
-                    NFCTypeButton(type: .wifi, selectedType: $selectedType)
-                    NFCTypeButton(type: .sms, selectedType: $selectedType, label: "SMS")
-                    NFCTypeButton(type: .email, selectedType: $selectedType)
+                Button(action: {
+                    showWriteOptions.toggle()
+                }) {
+                    Text("Write to NFC")
+                        .fontWeight(.bold)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color.black)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
                 }
-                .frame(maxWidth: 300)
-                
-                Spacer()
-                
-                switch selectedType {
-                case .link:
-                    LinkInputView(writeAction: writeNFC)
-                case .text:
-                    TextInputView(writeAction: writeNFC)
-                case .wifi:
-                    WifiInputView(writeAction: writeNFC)
-                case .sms:
-                    SMSInputView(writeAction: writeNFC)
-                case .email:
-                    EmailInputView(writeAction: writeNFC)
+                .frame(width: 300, height: 44)
+
+                Button(action: {
+                    // Implement Read NFC functionality later
+                }) {
+                    Text("Read NFC")
+                        .fontWeight(.bold)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color.white)
+                        .foregroundColor(.black)
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.black, lineWidth: 1)
+                        )
+                }
+                .frame(width: 300, height: 44)
+
+                Button(action: {
+                    // Implement Clear NFC functionality later
+                }) {
+                    Text("Clear NFC")
+                        .fontWeight(.bold)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color.white)
+                        .foregroundColor(.black)
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.black, lineWidth: 1)
+                        )
+                }
+                .frame(width: 300, height: 44)
+
+                if showWriteOptions {
+                    writeOptionsView()
                 }
             }
             .padding()
@@ -66,7 +89,40 @@ struct NFCWriteView: View {
             Alert(title: Text("NFC Write"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
         }
     }
-    
+
+    func writeOptionsView() -> some View {
+        VStack(spacing: 20) {
+            Text("Select NFC Content Type")
+                .font(.headline)
+            
+            NFCTypeButton(type: .link, selectedType: $selectedType, label: "Link")
+                .frame(maxWidth: 300)
+            
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 15) {
+                NFCTypeButton(type: .text, selectedType: $selectedType, label: "Plain Text")
+                NFCTypeButton(type: .wifi, selectedType: $selectedType)
+                NFCTypeButton(type: .sms, selectedType: $selectedType, label: "SMS")
+                NFCTypeButton(type: .email, selectedType: $selectedType)
+            }
+            .frame(maxWidth: 300)
+            
+            Spacer()
+            
+            switch selectedType {
+            case .link:
+                LinkInputView(writeAction: writeNFC)
+            case .text:
+                TextInputView(writeAction: writeNFC)
+            case .wifi:
+                WifiInputView(writeAction: writeNFC)
+            case .sms:
+                SMSInputView(writeAction: writeNFC)
+            case .email:
+                EmailInputView(writeAction: writeNFC)
+            }
+        }
+    }
+
     func writeNFC(payload: NFCNDEFPayload?) {
         guard NFCNDEFReaderSession.readingAvailable else {
             alertMessage = "NFC is not available on this device"
