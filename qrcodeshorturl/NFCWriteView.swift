@@ -19,6 +19,7 @@ struct NFCWriteView: View {
     @State private var isClearing = false
     @State private var showReadNFCSheet = false
     @State private var nfcReadResult: NFCReadResult?
+    @State private var nfcReader: NFCReader?
 
     var body: some View {
         ScrollView {
@@ -100,7 +101,10 @@ struct NFCWriteView: View {
             }
             .padding()
         }
-        .sheet(isPresented: $showReadNFCSheet) {
+        .sheet(isPresented: $showReadNFCSheet, onDismiss: {
+            // Clear the nfcReadResult when the sheet is dismissed
+            nfcReadResult = nil
+        }) {
             ReadNFCView(nfcReadResult: $nfcReadResult)
         }
         .gesture(
@@ -201,12 +205,14 @@ struct NFCWriteView: View {
             return
         }
         
-        let nfcReader = NFCReader(completion: { result in
-            self.nfcReadResult = result
-            self.showReadNFCSheet = true
-        })
+        nfcReader = NFCReader { result in
+            DispatchQueue.main.async {
+                self.nfcReadResult = result
+                self.showReadNFCSheet = true
+            }
+        }
         
-        nfcSession = NFCNDEFReaderSession(delegate: nfcReader, queue: nil, invalidateAfterFirstRead: true)
+        nfcSession = NFCNDEFReaderSession(delegate: nfcReader!, queue: nil, invalidateAfterFirstRead: false)
         nfcSession?.alertMessage = "Hold your iPhone near an NFC tag to read its contents."
         nfcSession?.begin()
     }
