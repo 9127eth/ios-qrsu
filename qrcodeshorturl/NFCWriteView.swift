@@ -343,9 +343,13 @@ struct TextInputView: View {
             TextField("Enter text", text: $text)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
             Button("Write Text to NFC") {
-                if let payload = NFCNDEFPayload.wellKnownTypeTextPayload(string: text, locale: .current) {
-                    writeAction(payload)
-                }
+                let textPayload = NFCNDEFPayload(
+                    format: .nfcWellKnown,
+                    type: "T".data(using: .utf8)!,
+                    identifier: Data(),
+                    payload: text.data(using: .utf8)!
+                )
+                writeAction(textPayload)
             }
             .nfcWriteButtonStyle()
             .padding(.top, 20)
@@ -508,7 +512,8 @@ class NFCWriter: NSObject, NFCNDEFReaderSessionDelegate {
                         }
                     } else {
                         // Writing new data to the tag
-                        let message = NFCNDEFMessage(records: [self.payload])
+                        let textPayload = self.createProperTextPayload(from: self.payload)
+                        let message = NFCNDEFMessage(records: [textPayload])
                         tag.writeNDEF(message) { error in
                             if let error = error {
                                 session.invalidate(errorMessage: "Write failed: \(error.localizedDescription)")
@@ -524,6 +529,23 @@ class NFCWriter: NSObject, NFCNDEFReaderSessionDelegate {
             }
         }
     }
+    
+    private func createProperTextPayload(from payload: NFCNDEFPayload) -> NFCNDEFPayload {
+        let languageCode = "en"
+        let textContent = String(data: payload.payload, encoding: .utf8) ?? ""
+        
+        var payloadData = Data([0x02])  // Status byte (UTF-8)
+        payloadData += languageCode.data(using: .utf8)!
+        payloadData += Data([0x00])  // Null terminator for language code
+        payloadData += textContent.data(using: .utf8)!
+        
+        return NFCNDEFPayload(
+            format: .nfcWellKnown,
+            type: "T".data(using: .utf8)!,
+            identifier: Data(),
+            payload: payloadData
+        )
+    }
 }
 
 #if canImport(UIKit)
@@ -538,3 +560,4 @@ extension View {
     }
 }
 #endif
+
