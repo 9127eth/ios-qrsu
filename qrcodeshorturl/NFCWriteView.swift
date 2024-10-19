@@ -170,7 +170,7 @@ struct NFCWriteView: View {
             return
         }
         
-        nfcWriter = NFCWriter(payload: payload, alertMessage: $alertMessage, showAlert: $showAlert)
+        nfcWriter = NFCWriter(payload: payload, contentType: selectedType, alertMessage: $alertMessage, showAlert: $showAlert)
         nfcSession = NFCNDEFReaderSession(delegate: nfcWriter!, queue: nil, invalidateAfterFirstRead: false)
         nfcSession?.alertMessage = "Hold your iPhone near an NFC tag to write the data."
         nfcSession?.begin()
@@ -187,7 +187,7 @@ struct NFCWriteView: View {
         }
         
         let clearPayload = NFCNDEFPayload(format: .empty, type: Data(), identifier: Data(), payload: Data())
-        nfcWriter = NFCWriter(payload: clearPayload, alertMessage: $alertMessage, showAlert: $showAlert)
+        nfcWriter = NFCWriter(payload: clearPayload, contentType: .text, alertMessage: $alertMessage, showAlert: $showAlert)
         nfcSession = NFCNDEFReaderSession(delegate: nfcWriter!, queue: nil, invalidateAfterFirstRead: false)
         nfcSession?.alertMessage = "Hold your iPhone near an NFC tag to clear its contents."
         nfcSession?.begin()
@@ -453,9 +453,11 @@ class NFCWriter: NSObject, NFCNDEFReaderSessionDelegate {
     var payload: NFCNDEFPayload
     @Binding var alertMessage: String
     @Binding var showAlert: Bool
+    var contentType: NFCContentType
     
-    init(payload: NFCNDEFPayload, alertMessage: Binding<String>, showAlert: Binding<Bool>) {
+    init(payload: NFCNDEFPayload, contentType: NFCContentType, alertMessage: Binding<String>, showAlert: Binding<Bool>) {
         self.payload = payload
+        self.contentType = contentType
         self._alertMessage = alertMessage
         self._showAlert = showAlert
     }
@@ -512,8 +514,13 @@ class NFCWriter: NSObject, NFCNDEFReaderSessionDelegate {
                         }
                     } else {
                         // Writing new data to the tag
-                        let textPayload = self.createProperTextPayload(from: self.payload)
-                        let message = NFCNDEFMessage(records: [textPayload])
+                        let message: NFCNDEFMessage
+                        if self.contentType == .text {
+                            let textPayload = self.createProperTextPayload(from: self.payload)
+                            message = NFCNDEFMessage(records: [textPayload])
+                        } else {
+                            message = NFCNDEFMessage(records: [self.payload])
+                        }
                         tag.writeNDEF(message) { error in
                             if let error = error {
                                 session.invalidate(errorMessage: "Write failed: \(error.localizedDescription)")
