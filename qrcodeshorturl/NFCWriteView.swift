@@ -330,11 +330,7 @@ class NFCWriter: NSObject, NFCNDEFReaderSessionDelegate {
     }
     
     func readerSession(_ session: NFCNDEFReaderSession, didDetectNDEFs messages: [NFCNDEFMessage]) {
-        // Not used for writing
-    }
-    
-    func readerSessionDidBecomeActive(_ session: NFCNDEFReaderSession) {
-        // Not used for writing
+        // This method is called when tags are read, not when writing
     }
     
     func readerSession(_ session: NFCNDEFReaderSession, didDetect tags: [NFCNDEFTag]) {
@@ -343,40 +339,15 @@ class NFCWriter: NSObject, NFCNDEFReaderSessionDelegate {
             return
         }
         
-        session.connect(to: tag) { error in
+        // Create an NFCNDEFMessage from the payload
+        let message = NFCNDEFMessage(records: [self.payload])
+        
+        tag.writeNDEF(message) { error in
             if let error = error {
-                session.invalidate(errorMessage: "Connection error: \(error.localizedDescription)")
-                return
-            }
-            
-            tag.queryNDEFStatus { status, capacity, error in
-                guard error == nil else {
-                    session.invalidate(errorMessage: "Query error: \(error!.localizedDescription)")
-                    return
-                }
-                
-                switch status {
-                case .notSupported:
-                    session.invalidate(errorMessage: "Tag is not NDEF compliant")
-                case .readOnly:
-                    session.invalidate(errorMessage: "Tag is read-only")
-                case .readWrite:
-                    let message = NFCNDEFMessage(records: [self.payload])
-                    tag.writeNDEF(message) { error in
-                        if let error = error {
-                            session.invalidate(errorMessage: "Write error: \(error.localizedDescription)")
-                        } else {
-                            session.alertMessage = "Successfully wrote message to tag"
-                            session.invalidate()
-                            DispatchQueue.main.async {
-                                self.alertMessage = "Successfully wrote message to tag"
-                                self.showAlert = true
-                            }
-                        }
-                    }
-                @unknown default:
-                    session.invalidate(errorMessage: "Unknown tag status")
-                }
+                session.invalidate(errorMessage: "Write failed: \(error.localizedDescription)")
+            } else {
+                session.alertMessage = "Tag written successfully!"
+                session.invalidate()
             }
         }
     }
