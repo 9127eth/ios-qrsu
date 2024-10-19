@@ -15,6 +15,8 @@ struct NFCWriteView: View {
     @State private var nfcWriter: NFCWriter?
     @State private var nfcSession: NFCNDEFReaderSession?
     @State private var showWriteOptions = false
+    @State private var showClearConfirmation = false
+    @State private var isClearing = false
 
     var body: some View {
         ScrollView {
@@ -69,7 +71,7 @@ struct NFCWriteView: View {
                 .frame(width: 300, height: 44)
 
                 Button(action: {
-                    // Implement Clear NFC functionality later
+                    showClearConfirmation = true
                 }) {
                     Text("Clear NFC")
                         .fontWeight(.bold)
@@ -84,6 +86,7 @@ struct NFCWriteView: View {
                         )
                 }
                 .frame(width: 300, height: 44)
+                .disabled(isClearing)
             }
             .padding()
         }
@@ -95,6 +98,14 @@ struct NFCWriteView: View {
         )
         .alert(isPresented: $showAlert) {
             Alert(title: Text("NFC Write"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+        }
+        .confirmationDialog("Clear NFC Tag", isPresented: $showClearConfirmation, titleVisibility: .visible) {
+            Button("Yes, Continue", role: .destructive) {
+                clearNFCTag()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This action will erase all data on the NFC tag. This process is irreversible. Do you want to continue?")
         }
     }
 
@@ -146,6 +157,28 @@ struct NFCWriteView: View {
         nfcSession = NFCNDEFReaderSession(delegate: nfcWriter!, queue: nil, invalidateAfterFirstRead: false)
         nfcSession?.alertMessage = "Hold your iPhone near an NFC tag to write the data."
         nfcSession?.begin()
+    }
+
+    func clearNFCTag() {
+        isClearing = true
+        
+        guard NFCNDEFReaderSession.readingAvailable else {
+            alertMessage = "NFC is not available on this device"
+            showAlert = true
+            isClearing = false
+            return
+        }
+        
+        let clearPayload = NFCNDEFPayload(format: .empty, type: Data(), identifier: Data(), payload: Data())
+        nfcWriter = NFCWriter(payload: clearPayload, alertMessage: $alertMessage, showAlert: $showAlert)
+        nfcSession = NFCNDEFReaderSession(delegate: nfcWriter!, queue: nil, invalidateAfterFirstRead: false)
+        nfcSession?.alertMessage = "Hold your iPhone near an NFC tag to clear its contents."
+        nfcSession?.begin()
+        
+        // Reset isClearing after a delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+            isClearing = false
+        }
     }
 }
 
@@ -409,15 +442,49 @@ class NFCWriter: NSObject, NFCNDEFReaderSessionDelegate {
             return
         }
         
-        // Create an NFCNDEFMessage from the payload
-        let message = NFCNDEFMessage(records: [self.payload])
-        
-        tag.writeNDEF(message) { error in
+        session.connect(to: tag) { error in
             if let error = error {
-                session.invalidate(errorMessage: "Write failed: \(error.localizedDescription)")
-            } else {
-                session.alertMessage = "Tag written successfully!"
-                session.invalidate()
+                session.invalidate(errorMessage: "Connection failed: \(error.localizedDescription)")
+                return
+            }
+            
+            tag.queryNDEFStatus { status, capacity, error in
+                if let error = error {
+                    session.invalidate(errorMessage: "Query failed: \(error.localizedDescription)")
+                    return
+                }
+                
+                switch status {
+                case .notSupported:
+                    session.invalidate(errorMessage: "Tag is not NDEF compliant")
+                case .readOnly:
+                    session.invalidate(errorMessage: "Tag is read-only")
+                case .readWrite:
+                    if self.payload.typeNameFormat == .empty {
+                        // Clearing the tag
+                        tag.writeNDEF(NFCNDEFMessage(records: [])) { error in
+                            if let error = error {
+                                session.invalidate(errorMessage: "Clear failed: \(error.localizedDescription)")
+                            } else {
+                                session.alertMessage = "Tag cleared successfully!"
+                                session.invalidate()
+                            }
+                        }
+                    } else {
+                        // Writing new data to the tag
+                        let message = NFCNDEFMessage(records: [self.payload])
+                        tag.writeNDEF(message) { error in
+                            if let error = error {
+                                session.invalidate(errorMessage: "Write failed: \(error.localizedDescription)")
+                            } else {
+                                session.alertMessage = "Tag written successfully!"
+                                session.invalidate()
+                            }
+                        }
+                    }
+                @unknown default:
+                    session.invalidate(errorMessage: "Unknown tag status")
+                }
             }
         }
     }
