@@ -17,6 +17,8 @@ struct NFCWriteView: View {
     @State private var showWriteOptions = false
     @State private var showClearConfirmation = false
     @State private var isClearing = false
+    @State private var showReadNFCSheet = false
+    @State private var nfcReadResult: NFCReadResult?
 
     var body: some View {
         ScrollView {
@@ -48,13 +50,21 @@ struct NFCWriteView: View {
                 if showWriteOptions {
                     writeOptionsView()
                     
+                    Button(action: {
+                        showWriteOptions = false
+                    }) {
+                        Text("Close")
+                            .foregroundColor(.black)
+                    }
+                    .padding(.top, 10)
+                    
                     Divider()
                         .background(Color.gray)
                         .padding(.vertical)
                 }
 
                 Button(action: {
-                    // Implement Read NFC functionality later
+                    readNFC()
                 }) {
                     Text("Read NFC")
                         .fontWeight(.bold)
@@ -89,6 +99,9 @@ struct NFCWriteView: View {
                 .disabled(isClearing)
             }
             .padding()
+        }
+        .sheet(isPresented: $showReadNFCSheet) {
+            ReadNFCView(nfcReadResult: $nfcReadResult)
         }
         .gesture(
             TapGesture()
@@ -179,6 +192,23 @@ struct NFCWriteView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
             isClearing = false
         }
+    }
+
+    func readNFC() {
+        guard NFCNDEFReaderSession.readingAvailable else {
+            alertMessage = "NFC is not available on this device"
+            showAlert = true
+            return
+        }
+        
+        let nfcReader = NFCReader(completion: { result in
+            self.nfcReadResult = result
+            self.showReadNFCSheet = true
+        })
+        
+        nfcSession = NFCNDEFReaderSession(delegate: nfcReader, queue: nil, invalidateAfterFirstRead: true)
+        nfcSession?.alertMessage = "Hold your iPhone near an NFC tag to read its contents."
+        nfcSession?.begin()
     }
 }
 
