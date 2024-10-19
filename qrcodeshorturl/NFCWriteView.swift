@@ -18,7 +18,7 @@ struct NFCWriteView: View {
     @State private var showClearConfirmation = false
     @State private var isClearing = false
     @State private var showReadNFCSheet = false
-    @State private var nfcReadResult: NFCReadResult?
+    @Binding var nfcReadResult: NFCReadResult?
     @State private var nfcReader: NFCReader?
 
     var body: some View {

@@ -37,6 +37,8 @@ struct qrcodeshorturlApp: App {
 }
 
 struct MainTabView: View {
+    @State private var nfcReadResult: NFCReadResult?
+
     var body: some View {
         TabView {
             NavigationView {
@@ -48,13 +50,13 @@ struct MainTabView: View {
             }
             
             NavigationView {
-                NFCWriteView()
+                NFCWriteView(nfcReadResult: $nfcReadResult)
                     .navigationBarHidden(true)
             }
             .tabItem {
                 Label("NFC Tools", systemImage: "wave.3.right")
             }
         }
-        .accentColor(.black) // This changes the selected tab color to black
+        .accentColor(.black)
     }
 }
