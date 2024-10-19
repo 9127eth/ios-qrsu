@@ -33,11 +33,23 @@ struct NFCWriteView: View {
                         .fontWeight(.bold)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
-                        .background(Color.black)
-                        .foregroundColor(.white)
+                        .background(Color.white)
+                        .foregroundColor(.black)
                         .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.gray, lineWidth: 1)
+                        )
                 }
                 .frame(width: 300, height: 44)
+
+                if showWriteOptions {
+                    writeOptionsView()
+                    
+                    Divider()
+                        .background(Color.gray)
+                        .padding(.vertical)
+                }
 
                 Button(action: {
                     // Implement Read NFC functionality later
@@ -51,7 +63,7 @@ struct NFCWriteView: View {
                         .cornerRadius(8)
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.black, lineWidth: 1)
+                                .stroke(Color.gray, lineWidth: 1)
                         )
                 }
                 .frame(width: 300, height: 44)
@@ -68,14 +80,10 @@ struct NFCWriteView: View {
                         .cornerRadius(8)
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.black, lineWidth: 1)
+                                .stroke(Color.gray, lineWidth: 1)
                         )
                 }
                 .frame(width: 300, height: 44)
-
-                if showWriteOptions {
-                    writeOptionsView()
-                }
             }
             .padding()
         }
@@ -105,8 +113,6 @@ struct NFCWriteView: View {
                 NFCTypeButton(type: .email, selectedType: $selectedType)
             }
             .frame(maxWidth: 300)
-            
-            Spacer()
             
             switch selectedType {
             case .link:
