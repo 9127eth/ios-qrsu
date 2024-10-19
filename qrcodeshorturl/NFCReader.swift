@@ -66,11 +66,18 @@ class NFCReader: NSObject, NFCNDEFReaderSessionDelegate {
                     let content: String
                     switch record.typeNameFormat {
                     case .nfcWellKnown:
-                        content = String(data: record.payload.advanced(by: 3), encoding: .utf8) ?? "Unable to decode content"
-                    case .absoluteURI:
+                        // Convert record.type to String for comparison
+                        let typeString = String(data: record.type, encoding: .utf8) ?? ""
+                        if typeString == "T" {
+                            // Remove the language code (first byte) for Text records
+                            content = String(data: record.payload.advanced(by: 1), encoding: .utf8) ?? "Unable to decode content"
+                        } else {
+                            content = String(data: record.payload, encoding: .utf8) ?? "Unable to decode content"
+                        }
+                    case .absoluteURI, .media, .nfcExternal, .empty, .unknown:
                         content = String(data: record.payload, encoding: .utf8) ?? "Unable to decode content"
-                    default:
-                        content = "Unsupported type"
+                    @unknown default:
+                        content = "Unsupported record type"
                     }
 
                     let contentType = String(data: record.type, encoding: .utf8) ?? "Unknown"
