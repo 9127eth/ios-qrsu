@@ -69,13 +69,18 @@ class NFCReader: NSObject, NFCNDEFReaderSessionDelegate {
                         // Convert record.type to String for comparison
                         let typeString = String(data: record.type, encoding: .utf8) ?? ""
                         if typeString == "T" {
-                            // Remove the language code and any extra characters for Text records
-                            if let payload = String(data: record.payload, encoding: .utf8) {
-                                let components = payload.components(separatedBy: "\u{0000}")
-                                content = components.last ?? "Unable to decode content"
-                            } else {
-                                content = "Unable to decode content"
-                            }
+                            // Handle Text record
+                            let payload = record.payload
+                            // The first byte is the status byte
+                            let statusByte = payload[0]
+                            let languageCodeLength = Int(statusByte & 0x3F)
+                            
+                            // Extract the language code and the actual text content
+                            let languageCode = String(data: payload.subdata(in: 1..<(1 + languageCodeLength)), encoding: .utf8) ?? ""
+                            let textContent = String(data: payload.subdata(in: (1 + languageCodeLength)..<payload.count), encoding: .utf8) ?? ""
+                            
+                            // Combine language code and text content, but only if language code is not "en"
+                            content = (languageCode != "en") ? "\(languageCode):\(textContent)" : textContent
                         } else {
                             content = String(data: record.payload, encoding: .utf8) ?? "Unable to decode content"
                         }
