@@ -67,8 +67,11 @@ struct NFCWriteView: View {
                             headerOpacity = 1
                         }
                     }) {
-                        Text("Close")
-                            .foregroundColor(.black)
+                        HStack {
+                            Text("Close")
+                            Image(systemName: "chevron.up")
+                        }
+                        .foregroundColor(.black)
                     }
                     .padding(.top, 10)
                     
@@ -368,6 +371,7 @@ struct LinkInputView: View {
             }
             .nfcWriteButtonStyle()
             .padding(.top, 20)
+            .frame(maxWidth: .infinity, alignment: .center)
             .disabled(url.isEmpty || isValidating)
         }
         .padding(.horizontal)
@@ -439,6 +443,7 @@ struct TextInputView: View {
             }
             .nfcWriteButtonStyle()
             .padding(.top, 20)
+            .frame(maxWidth: .infinity, alignment: .center)
         }
         .padding(.horizontal)
         .padding(.bottom, 20)
@@ -496,6 +501,7 @@ struct WifiInputView: View {
             }
             .nfcWriteButtonStyle()
             .padding(.top, 20)
+            .frame(maxWidth: .infinity, alignment: .center)
         }
         .padding(.horizontal)
         .padding(.bottom, 20)
@@ -530,6 +536,7 @@ struct SMSInputView: View {
             }
             .nfcWriteButtonStyle()
             .padding(.top, 20)
+            .frame(maxWidth: .infinity, alignment: .center)
         }
         .padding(.horizontal)
         .padding(.bottom, 20)
@@ -571,6 +578,7 @@ struct EmailInputView: View {
             }
             .nfcWriteButtonStyle()
             .padding(.top, 20)
+            .frame(maxWidth: .infinity, alignment: .center)
         }
         .padding(.horizontal)
         .padding(.bottom, 20)
