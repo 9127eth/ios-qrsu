@@ -39,7 +39,7 @@ struct ReadNFCView: View {
                     }
                 }
                 .listStyle(GroupedListStyle())
-                .navigationTitle("NFC Read Result")
+                .navigationTitle("NFC Details")
                 .navigationBarItems(trailing: Button("Close") {
                     presentationMode.wrappedValue.dismiss()
                 })

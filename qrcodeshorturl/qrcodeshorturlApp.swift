@@ -46,7 +46,7 @@ struct MainTabView: View {
                     .navigationBarHidden(true)
             }
             .tabItem {
-                Label("Home", systemImage: "house")
+                Label("qrsu", systemImage: "qrcode")
             }
             
             NavigationView {

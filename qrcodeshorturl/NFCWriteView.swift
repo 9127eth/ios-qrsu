@@ -25,80 +25,87 @@ struct NFCWriteView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                Text("The greatest NFC Tools ever made.")
+                Text("The greatest NFC tools ever made.")
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .multilineTextAlignment(.center)
                     .padding(.top, 40)
                     .padding(.bottom, 20)
 
-                Button(action: {
-                    showWriteOptions.toggle()
-                }) {
-                    Text("Write to NFC")
-                        .fontWeight(.bold)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(Color.white)
-                        .foregroundColor(.black)
-                        .cornerRadius(8)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.gray, lineWidth: 1)
-                        )
-                }
-                .frame(width: 300, height: 44)
+                Spacer()
 
-                if showWriteOptions {
-                    writeOptionsView()
-                    
+                VStack(spacing: 20) {
                     Button(action: {
-                        showWriteOptions = false
+                        showWriteOptions.toggle()
                     }) {
-                        Text("Close")
+                        Text("Write to NFC")
+                            .fontWeight(.bold)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(Color.white)
                             .foregroundColor(.black)
+                            .cornerRadius(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.gray, lineWidth: 1)
+                            )
                     }
-                    .padding(.top, 10)
-                    
-                    Divider()
-                        .background(Color.gray)
-                        .padding(.vertical)
-                }
+                    .frame(width: 300, height: 44)
 
-                Button(action: {
-                    readNFC()
-                }) {
-                    Text("Read NFC")
-                        .fontWeight(.bold)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(Color.white)
-                        .foregroundColor(.black)
-                        .cornerRadius(8)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.gray, lineWidth: 1)
-                        )
-                }
-                .frame(width: 300, height: 44)
+                    if showWriteOptions {
+                        writeOptionsView()
+                        
+                        Button(action: {
+                            showWriteOptions = false
+                        }) {
+                            Text("Close")
+                                .foregroundColor(.black)
+                        }
+                        .padding(.top, 10)
+                        
+                        Divider()
+                            .background(Color.gray)
+                            .padding(.vertical)
+                    }
 
-                Button(action: {
-                    showClearConfirmation = true
-                }) {
-                    Text("Clear NFC")
-                        .fontWeight(.bold)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(Color.white)
-                        .foregroundColor(.black)
-                        .cornerRadius(8)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.gray, lineWidth: 1)
-                        )
+                    Button(action: {
+                        readNFC()
+                    }) {
+                        Text("Read NFC")
+                            .fontWeight(.bold)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(Color.white)
+                            .foregroundColor(.black)
+                            .cornerRadius(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.gray, lineWidth: 1)
+                            )
+                    }
+                    .frame(width: 300, height: 44)
+
+                    Button(action: {
+                        showClearConfirmation = true
+                    }) {
+                        Text("Clear NFC")
+                            .fontWeight(.bold)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(Color.white)
+                            .foregroundColor(.black)
+                            .cornerRadius(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.gray, lineWidth: 1)
+                            )
+                    }
+                    .frame(width: 300, height: 44)
+                    .disabled(isClearing)
                 }
-                .frame(width: 300, height: 44)
-                .disabled(isClearing)
+                .padding(.vertical, 40)
+
+                Spacer()
             }
             .padding()
         }
@@ -582,4 +589,3 @@ extension View {
     }
 }
 #endif
-
