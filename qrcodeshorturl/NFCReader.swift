@@ -66,20 +66,13 @@ class NFCReader: NSObject, NFCNDEFReaderSessionDelegate {
                     let content: String
                     switch record.typeNameFormat {
                     case .nfcWellKnown:
-                        // Convert record.type to String for comparison
                         let typeString = String(data: record.type, encoding: .utf8) ?? ""
                         if typeString == "T" {
-                            // Handle Text record
                             let payload = record.payload
-                            // The first byte is the status byte
                             let statusByte = payload[0]
                             let languageCodeLength = Int(statusByte & 0x3F)
-                            
-                            // Extract the language code and the actual text content
                             let languageCode = String(data: payload.subdata(in: 1..<(1 + languageCodeLength)), encoding: .utf8) ?? ""
                             let textContent = String(data: payload.subdata(in: (1 + languageCodeLength)..<payload.count), encoding: .utf8) ?? ""
-                            
-                            // Combine language code and text content, but only if language code is not "en"
                             content = (languageCode != "en") ? "\(languageCode):\(textContent)" : textContent
                         } else {
                             content = String(data: record.payload, encoding: .utf8) ?? "Unable to decode content"
@@ -92,15 +85,17 @@ class NFCReader: NSObject, NFCNDEFReaderSessionDelegate {
 
                     let contentType = String(data: record.type, encoding: .utf8) ?? "Unknown"
 
+                    let result = NFCReadResult(
+                        content: content,
+                        contentType: contentType,
+                        tagType: "NDEF",
+                        size: record.payload.count,
+                        capacity: capacity,
+                        isWritable: status == .readWrite
+                    )
+
                     DispatchQueue.main.async {
-                        self.completion(NFCReadResult(
-                            content: content,
-                            contentType: contentType,
-                            tagType: "NDEF",
-                            size: record.payload.count,
-                            capacity: capacity,
-                            isWritable: status == .readWrite
-                        ))
+                        self.completion(result)
                     }
 
                     session.alertMessage = "Tag read successfully!"

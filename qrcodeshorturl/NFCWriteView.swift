@@ -20,6 +20,7 @@ struct NFCWriteView: View {
     @State private var showReadNFCSheet = false
     @Binding var nfcReadResult: NFCReadResult?
     @State private var nfcReader: NFCReader?
+    @State private var isNFCReady = false
 
     var body: some View {
         ScrollView {
@@ -124,6 +125,9 @@ struct NFCWriteView: View {
         } message: {
             Text("This action will erase all data on the NFC tag. This process is irreversible. Do you want to continue?")
         }
+        .onAppear {
+            initializeNFCReader()
+        }
     }
 
     func writeOptionsView() -> some View {
@@ -199,6 +203,18 @@ struct NFCWriteView: View {
     }
 
     func readNFC() {
+        guard isNFCReady else {
+            alertMessage = "NFC is not ready yet. Please try again in a moment."
+            showAlert = true
+            return
+        }
+        
+        nfcSession = NFCNDEFReaderSession(delegate: nfcReader!, queue: nil, invalidateAfterFirstRead: false)
+        nfcSession?.alertMessage = "Hold your iPhone near an NFC tag to read its contents."
+        nfcSession?.begin()
+    }
+
+    private func initializeNFCReader() {
         guard NFCNDEFReaderSession.readingAvailable else {
             alertMessage = "NFC is not available on this device"
             showAlert = true
@@ -208,13 +224,12 @@ struct NFCWriteView: View {
         nfcReader = NFCReader { result in
             DispatchQueue.main.async {
                 self.nfcReadResult = result
-                self.showReadNFCSheet = true
+                if result != nil {
+                    self.showReadNFCSheet = true
+                }
             }
         }
-        
-        nfcSession = NFCNDEFReaderSession(delegate: nfcReader!, queue: nil, invalidateAfterFirstRead: false)
-        nfcSession?.alertMessage = "Hold your iPhone near an NFC tag to read its contents."
-        nfcSession?.begin()
+        isNFCReady = true
     }
 }
 

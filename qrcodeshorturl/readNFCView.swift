@@ -18,16 +18,12 @@ struct NFCReadResult {
 }
 
 struct ReadNFCView: View {
-    @State private var localNFCReadResult: NFCReadResult?
+    @Binding var nfcReadResult: NFCReadResult?
     @Environment(\.presentationMode) var presentationMode
     
-    init(nfcReadResult: Binding<NFCReadResult?>) {
-        _localNFCReadResult = State(initialValue: nfcReadResult.wrappedValue)
-    }
-
     var body: some View {
         NavigationView {
-            if let result = localNFCReadResult {
+            if let result = nfcReadResult {
                 List {
                     Section(header: Text("Content")) {
                         Text(result.content)
