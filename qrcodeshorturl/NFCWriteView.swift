@@ -32,80 +32,73 @@ struct NFCWriteView: View {
                     .padding(.top, 40)
                     .padding(.bottom, 20)
 
-                Spacer()
-
-                VStack(spacing: 20) {
-                    Button(action: {
-                        showWriteOptions.toggle()
-                    }) {
-                        Text("Write to NFC")
-                            .fontWeight(.bold)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(Color.white)
-                            .foregroundColor(.black)
-                            .cornerRadius(8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.gray, lineWidth: 1)
-                            )
-                    }
-                    .frame(width: 300, height: 44)
-
-                    if showWriteOptions {
-                        writeOptionsView()
-                        
-                        Button(action: {
-                            showWriteOptions = false
-                        }) {
-                            Text("Close")
-                                .foregroundColor(.black)
-                        }
-                        .padding(.top, 10)
-                        
-                        Divider()
-                            .background(Color.gray)
-                            .padding(.vertical)
-                    }
-
-                    Button(action: {
-                        readNFC()
-                    }) {
-                        Text("Read NFC")
-                            .fontWeight(.bold)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(Color.white)
-                            .foregroundColor(.black)
-                            .cornerRadius(8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.gray, lineWidth: 1)
-                            )
-                    }
-                    .frame(width: 300, height: 44)
-
-                    Button(action: {
-                        showClearConfirmation = true
-                    }) {
-                        Text("Clear NFC")
-                            .fontWeight(.bold)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(Color.white)
-                            .foregroundColor(.black)
-                            .cornerRadius(8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.gray, lineWidth: 1)
-                            )
-                    }
-                    .frame(width: 300, height: 44)
-                    .disabled(isClearing)
+                Button(action: {
+                    showWriteOptions.toggle()
+                }) {
+                    Text("Write to NFC")
+                        .fontWeight(.bold)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color.white)
+                        .foregroundColor(.black)
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.gray, lineWidth: 1)
+                        )
                 }
-                .padding(.vertical, 40)
+                .frame(width: 300, height: 44)
 
-                Spacer()
+                if showWriteOptions {
+                    writeOptionsView()
+                    
+                    Button(action: {
+                        showWriteOptions = false
+                    }) {
+                        Text("Close")
+                            .foregroundColor(.black)
+                    }
+                    .padding(.top, 10)
+                    
+                    Divider()
+                        .background(Color.gray)
+                        .padding(.vertical)
+                }
+
+                Button(action: {
+                    readNFC()
+                }) {
+                    Text("Read NFC")
+                        .fontWeight(.bold)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color.white)
+                        .foregroundColor(.black)
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.gray, lineWidth: 1)
+                        )
+                }
+                .frame(width: 300, height: 44)
+
+                Button(action: {
+                    showClearConfirmation = true
+                }) {
+                    Text("Clear NFC")
+                        .fontWeight(.bold)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color.white)
+                        .foregroundColor(.black)
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.gray, lineWidth: 1)
+                        )
+                }
+                .frame(width: 300, height: 44)
+                .disabled(isClearing)
             }
             .padding()
         }
@@ -282,6 +275,54 @@ extension View {
     }
 }
 
+struct NFCInputField: View {
+    var placeholder: String
+    @Binding var text: String
+    var keyboardType: UIKeyboardType = .default
+    var isSecure: Bool = false
+    @FocusState private var isFocused: Bool
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if isSecure {
+                SecureField(placeholder, text: $text)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .keyboardType(keyboardType)
+                    .padding(.vertical, 8)
+                    .focused($isFocused)
+                    .highlightOnFocus(isFocused: isFocused)
+            } else {
+                TextField(placeholder, text: $text)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .keyboardType(keyboardType)
+                    .padding(.vertical, 8)
+                    .focused($isFocused)
+                    .highlightOnFocus(isFocused: isFocused)
+            }
+        }
+        .padding(.horizontal)
+    }
+}
+
+struct HighlightOnFocus: ViewModifier {
+    let isFocused: Bool
+    
+    func body(content: Content) -> some View {
+        content
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.black, lineWidth: 2)
+                    .opacity(isFocused ? 1 : 0)
+            )
+    }
+}
+
+extension View {
+    func highlightOnFocus(isFocused: Bool) -> some View {
+        self.modifier(HighlightOnFocus(isFocused: isFocused))
+    }
+}
+
 struct LinkInputView: View {
     @State private var url = ""
     @State private var isValidating = false
@@ -293,8 +334,9 @@ struct LinkInputView: View {
     
     var body: some View {
         VStack {
-            TextField("Enter URL", text: $url)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
+            NFCInputField(placeholder: "Enter a URL", text: $url)
+                .autocapitalization(.none)
+                .disableAutocorrection(true)
             
             if let error = validationError {
                 Text(error)
@@ -362,8 +404,8 @@ struct TextInputView: View {
     
     var body: some View {
         VStack {
-            TextField("Enter text", text: $text)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
+            NFCInputField(placeholder: "Enter Text", text: $text)
+            
             Button("Write Text to NFC") {
                 let textPayload = NFCNDEFPayload(
                     format: .nfcWellKnown,
@@ -387,20 +429,41 @@ struct WifiInputView: View {
     @State private var password = ""
     @State private var isHidden = false
     @State private var encryptionType = "WPA"
+    @FocusState private var focusedField: Field?
+    
+    enum Field {
+        case ssid, password
+    }
     
     var body: some View {
-        VStack {
-            TextField("SSID", text: $ssid)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-            SecureField("Password", text: $password)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-            Toggle("Hidden Network", isOn: $isHidden)
-            Picker("Encryption", selection: $encryptionType) {
-                Text("WPA").tag("WPA")
-                Text("WEP").tag("WEP")
-                Text("None").tag("None")
+        VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading) {
+                Text("SSID")
+                    .font(.headline)
+                NFCInputField(placeholder: "SSID", text: $ssid)
+                    .focused($focusedField, equals: .ssid)
             }
-            .pickerStyle(SegmentedPickerStyle())
+            
+            VStack(alignment: .leading) {
+                Text("Password")
+                    .font(.headline)
+                NFCInputField(placeholder: "Password", text: $password, isSecure: true)
+                    .focused($focusedField, equals: .password)
+            }
+            
+            VStack(alignment: .leading) {
+                Text("Network Settings")
+                    .font(.headline)
+                
+                Toggle("Hidden Network", isOn: $isHidden)
+                
+                Picker("Encryption", selection: $encryptionType) {
+                    Text("WPA").tag("WPA")
+                    Text("WEP").tag("WEP")
+                    Text("None").tag("None")
+                }
+                .pickerStyle(SegmentedPickerStyle())
+            }
             
             Button("Write WiFi to NFC") {
                 let wifiConfig = "WIFI:S:\(ssid);T:\(encryptionType);P:\(password);H:\(isHidden ? "true" : "false");;"
@@ -411,6 +474,7 @@ struct WifiInputView: View {
             .nfcWriteButtonStyle()
             .padding(.top, 20)
         }
+        .padding(.horizontal)
         .padding(.bottom, 20)
     }
 }
@@ -423,11 +487,8 @@ struct SMSInputView: View {
     
     var body: some View {
         VStack {
-            TextField("Phone Number", text: $phoneNumber)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .keyboardType(.phonePad)
-            TextField("Message", text: $message)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
+            NFCInputField(placeholder: "Phone Number", text: $phoneNumber, keyboardType: .phonePad)
+            NFCInputField(placeholder: "Message", text: $message)
             Button("Write SMS to NFC") {
                 let smsURI = "sms:\(phoneNumber)?body=\(message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
                 if let payload = NFCNDEFPayload.wellKnownTypeURIPayload(url: URL(string: smsURI)!) {
@@ -450,13 +511,9 @@ struct EmailInputView: View {
     
     var body: some View {
         VStack {
-            TextField("Email Address", text: $emailAddress)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .keyboardType(.emailAddress)
-            TextField("Subject", text: $subject)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-            TextField("Message", text: $messageBody)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
+            NFCInputField(placeholder: "Email Address", text: $emailAddress, keyboardType: .emailAddress)
+            NFCInputField(placeholder: "Subject", text: $subject)
+            NFCInputField(placeholder: "Message", text: $messageBody)
             Button("Write Email to NFC") {
                 let emailURI = "mailto:\(emailAddress)?subject=\(subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&body=\(messageBody.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
                 if let payload = NFCNDEFPayload.wellKnownTypeURIPayload(url: URL(string: emailURI)!) {
@@ -589,3 +646,4 @@ extension View {
     }
 }
 #endif
+
