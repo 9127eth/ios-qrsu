@@ -21,6 +21,8 @@ struct NFCWriteView: View {
     @Binding var nfcReadResult: NFCReadResult?
     @State private var nfcReader: NFCReader?
     @State private var isNFCReady = false
+    @State private var contentOffset: CGFloat = 0
+    @State private var headerOpacity: Double = 1
 
     var body: some View {
         ScrollView {
@@ -31,9 +33,14 @@ struct NFCWriteView: View {
                     .multilineTextAlignment(.center)
                     .padding(.top, 40)
                     .padding(.bottom, 20)
+                    .opacity(headerOpacity)
 
                 Button(action: {
-                    showWriteOptions.toggle()
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        showWriteOptions.toggle()
+                        contentOffset = showWriteOptions ? -200 : 0
+                        headerOpacity = showWriteOptions ? 0 : 1
+                    }
                 }) {
                     Text("Write to NFC")
                         .fontWeight(.bold)
@@ -48,12 +55,17 @@ struct NFCWriteView: View {
                         )
                 }
                 .frame(width: 300, height: 44)
+                .opacity(headerOpacity)
 
                 if showWriteOptions {
                     writeOptionsView()
                     
                     Button(action: {
-                        showWriteOptions = false
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            showWriteOptions = false
+                            contentOffset = 0
+                            headerOpacity = 1
+                        }
                     }) {
                         Text("Close")
                             .foregroundColor(.black)
@@ -101,6 +113,7 @@ struct NFCWriteView: View {
                 .disabled(isClearing)
             }
             .padding()
+            .offset(y: contentOffset)
         }
         .sheet(isPresented: $showReadNFCSheet, onDismiss: {
             // Clear the nfcReadResult when the sheet is dismissed
