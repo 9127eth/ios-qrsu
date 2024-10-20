@@ -333,10 +333,14 @@ struct LinkInputView: View {
     private let urlValidationService = URLValidationService()
     
     var body: some View {
-        VStack {
-            NFCInputField(placeholder: "Enter a URL", text: $url)
-                .autocapitalization(.none)
-                .disableAutocorrection(true)
+        VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading) {
+                Text("Enter a URL")
+                    .font(.headline)
+                NFCInputField(placeholder: "Enter a URL", text: $url)
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
+            }
             
             if let error = validationError {
                 Text(error)
@@ -353,6 +357,7 @@ struct LinkInputView: View {
             .padding(.top, 20)
             .disabled(url.isEmpty || isValidating)
         }
+        .padding(.horizontal)
         .padding(.bottom, 20)
         .alert("Invalid Domain Extension", isPresented: $showInvalidExtensionAlert) {
             Button("Cancel", role: .cancel) { }
@@ -403,8 +408,12 @@ struct TextInputView: View {
     @State private var text = ""
     
     var body: some View {
-        VStack {
-            NFCInputField(placeholder: "Enter Text", text: $text)
+        VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading) {
+                Text("EnterText")
+                    .font(.headline)
+                NFCInputField(placeholder: "Enter Text", text: $text)
+            }
             
             Button("Write Text to NFC") {
                 let textPayload = NFCNDEFPayload(
@@ -418,6 +427,7 @@ struct TextInputView: View {
             .nfcWriteButtonStyle()
             .padding(.top, 20)
         }
+        .padding(.horizontal)
         .padding(.bottom, 20)
     }
 }
@@ -486,9 +496,19 @@ struct SMSInputView: View {
     @State private var message = ""
     
     var body: some View {
-        VStack {
-            NFCInputField(placeholder: "Phone Number", text: $phoneNumber, keyboardType: .phonePad)
-            NFCInputField(placeholder: "Message", text: $message)
+        VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading) {
+                Text("Phone Number")
+                    .font(.headline)
+                NFCInputField(placeholder: "Phone Number", text: $phoneNumber, keyboardType: .phonePad)
+            }
+            
+            VStack(alignment: .leading) {
+                Text("Message")
+                    .font(.headline)
+                NFCInputField(placeholder: "Message", text: $message)
+            }
+            
             Button("Write SMS to NFC") {
                 let smsURI = "sms:\(phoneNumber)?body=\(message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
                 if let payload = NFCNDEFPayload.wellKnownTypeURIPayload(url: URL(string: smsURI)!) {
@@ -498,6 +518,7 @@ struct SMSInputView: View {
             .nfcWriteButtonStyle()
             .padding(.top, 20)
         }
+        .padding(.horizontal)
         .padding(.bottom, 20)
     }
 }
@@ -510,10 +531,25 @@ struct EmailInputView: View {
     @State private var messageBody = ""
     
     var body: some View {
-        VStack {
-            NFCInputField(placeholder: "Email Address", text: $emailAddress, keyboardType: .emailAddress)
-            NFCInputField(placeholder: "Subject", text: $subject)
-            NFCInputField(placeholder: "Message", text: $messageBody)
+        VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading) {
+                Text("Email Address")
+                    .font(.headline)
+                NFCInputField(placeholder: "Email Address", text: $emailAddress, keyboardType: .emailAddress)
+            }
+            
+            VStack(alignment: .leading) {
+                Text("Subject")
+                    .font(.headline)
+                NFCInputField(placeholder: "Subject", text: $subject)
+            }
+            
+            VStack(alignment: .leading) {
+                Text("Message")
+                    .font(.headline)
+                NFCInputField(placeholder: "Message", text: $messageBody)
+            }
+            
             Button("Write Email to NFC") {
                 let emailURI = "mailto:\(emailAddress)?subject=\(subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&body=\(messageBody.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
                 if let payload = NFCNDEFPayload.wellKnownTypeURIPayload(url: URL(string: emailURI)!) {
@@ -523,6 +559,7 @@ struct EmailInputView: View {
             .nfcWriteButtonStyle()
             .padding(.top, 20)
         }
+        .padding(.horizontal)
         .padding(.bottom, 20)
     }
 }
