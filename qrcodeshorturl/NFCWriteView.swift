@@ -71,7 +71,7 @@ struct NFCWriteView: View {
                             Text("Close")
                             Image(systemName: "chevron.up")
                         }
-                        .foregroundColor(.black)
+                        .foregroundColor(.primary)
                     }
                     .padding(.top, 10)
                     
@@ -278,7 +278,7 @@ enum NFCContentType: String {
 // Common button modifier
 extension View {
     func nfcWriteButtonStyle() -> some View {
-        self.frame(height: 44) // Set a specific height
+        self.frame(height: 44)
             .padding(.horizontal)
             .background(Color.black)
             .foregroundColor(.white)
@@ -286,7 +286,7 @@ extension View {
             .cornerRadius(8)
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color.black, lineWidth: 1)
+                    .stroke(Color.primary, lineWidth: 1)
             )
     }
 }

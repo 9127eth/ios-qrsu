@@ -11,6 +11,7 @@ import SwiftUI
 struct qrcodeshorturlApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @State private var isShowingSplash = true
+    @AppStorage("isDarkMode") private var isDarkMode = false
     
     var body: some Scene {
         WindowGroup {
@@ -32,11 +33,13 @@ struct qrcodeshorturlApp: App {
                     }
                 }
             }
+            .preferredColorScheme(isDarkMode ? .dark : .light)
         }
     }
 }
 
 struct MainTabView: View {
+    @AppStorage("isDarkMode") private var isDarkMode = false
     @State private var nfcReadResult: NFCReadResult?
 
     var body: some View {
@@ -54,9 +57,20 @@ struct MainTabView: View {
                     .navigationBarHidden(true)
             }
             .tabItem {
-                Label("NFC Tools", systemImage: "wave.3.right")
+                Image("nfc")
+                    .renderingMode(.template)
+                Text("nfc tools")
+            }
+            
+            NavigationView {
+                SettingsView()
+            }
+            .tabItem {
+                Image("Settings")
+                    .renderingMode(.template)
+                Text("settings")
             }
         }
-        .accentColor(.black)
+        .accentColor(isDarkMode ? .white : .black)
     }
 }

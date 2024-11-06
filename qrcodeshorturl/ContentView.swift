@@ -57,7 +57,10 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
-            Color.white.edgesIgnoringSafeArea(.all)
+            Color(UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ? .black : .white
+            })
+            .edgesIgnoringSafeArea(.all)
             
             ScrollView {
                 VStack(spacing: 20) {
@@ -157,6 +160,9 @@ struct ContentView: View {
         VStack(alignment: .leading) {
             Text("Enter a URL")
                 .font(.headline)
+                .foregroundColor(Color(UIColor { traitCollection in
+                    traitCollection.userInterfaceStyle == .dark ? .white : .black
+                }))
 
             TextField("https://example.com", text: $url)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
@@ -167,7 +173,9 @@ struct ContentView: View {
                 .padding(.horizontal, 4)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(url.isEmpty ? Color.clear : Color.black, lineWidth: 2)
+                        .stroke(url.isEmpty ? Color.clear : Color(UIColor { traitCollection in
+                            traitCollection.userInterfaceStyle == .dark ? .white : .black
+                        }), lineWidth: 2)
                         .padding(.horizontal, -4)
                 )
                 .foregroundColor(.primary)
@@ -225,7 +233,7 @@ struct ContentView: View {
             HStack {
                 Text("Format:")
                     .font(.subheadline)
-                    .foregroundColor(.black)
+                    .foregroundColor(.primary)
                 Picker("Format", selection: $selectedFormat) {
                     Text("PNG").tag("png")
                     Text("JPEG").tag("jpeg")
@@ -346,7 +354,7 @@ struct ContentView: View {
             clearAll()
         }) {
             Text("Clear")
-                .foregroundColor(.black)
+                .foregroundColor(.primary)
                 .padding(.vertical, 10)
         }
         .padding(.horizontal)
@@ -356,25 +364,29 @@ struct ContentView: View {
     // MARK: - Helper Views and Styles
 
     struct BlackButtonStyle: ButtonStyle {
+        @Environment(\.colorScheme) var colorScheme
+        
         func makeBody(configuration: Configuration) -> some View {
             configuration.label
                 .fontWeight(.bold)
                 .padding(.vertical, 12)
                 .frame(maxWidth: .infinity)
-                .background(configuration.isPressed ? Color.gray : Color.black)
-                .foregroundColor(.white)
+                .background(colorScheme == .dark ? Color.white : Color.black)
+                .foregroundColor(colorScheme == .dark ? Color.black : Color.white)
                 .cornerRadius(8)
         }
     }
 
     struct WhiteButtonStyle: ButtonStyle {
+        @Environment(\.colorScheme) var colorScheme
+        
         func makeBody(configuration: Configuration) -> some View {
             configuration.label
                 .fontWeight(.bold)
                 .padding(.vertical, 12)
                 .frame(maxWidth: .infinity)
-                .background(configuration.isPressed ? Color.gray.opacity(0.2) : Color.white)
-                .foregroundColor(.black)
+                .background(colorScheme == .dark ? Color.black : Color.white)
+                .foregroundColor(colorScheme == .dark ? Color.white : Color.black)
                 .cornerRadius(8)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
