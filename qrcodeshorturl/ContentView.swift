@@ -224,10 +224,16 @@ struct ContentView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 200, height: 200)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                    )
             } else {
                 Text("QR Code")
                     .frame(width: 200, height: 200)
                     .background(Color.gray.opacity(0.2))
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
             }
 
             HStack {
@@ -264,7 +270,7 @@ struct ContentView: View {
                         .stroke(Color.black, lineWidth: 1)
                 )
             }
-            .frame(maxWidth: 200) // Limit the width of the button
+            .frame(maxWidth: 200)
         }
         .padding()
     }
