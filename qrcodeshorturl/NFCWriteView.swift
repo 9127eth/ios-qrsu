@@ -292,31 +292,36 @@ extension View {
 }
 
 struct NFCInputField: View {
-    var placeholder: String
+    let placeholder: String
     @Binding var text: String
-    var keyboardType: UIKeyboardType = .default
     var isSecure: Bool = false
+    var keyboardType: UIKeyboardType = .default
     @FocusState private var isFocused: Bool
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        Group {
             if isSecure {
                 SecureField(placeholder, text: $text)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .keyboardType(keyboardType)
-                    .padding(.vertical, 8)
-                    .focused($isFocused)
-                    .highlightOnFocus(isFocused: isFocused)
             } else {
                 TextField(placeholder, text: $text)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
                     .keyboardType(keyboardType)
-                    .padding(.vertical, 8)
-                    .focused($isFocused)
-                    .highlightOnFocus(isFocused: isFocused)
             }
         }
-        .padding(.horizontal)
+        .textFieldStyle(RoundedBorderTextFieldStyle())
+        .focused($isFocused)
+        .autocapitalization(.none)
+        .disableAutocorrection(true)
+        .padding(.vertical, 8)
+        .padding(.horizontal, 4)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(text.isEmpty ? Color.clear : Color(UIColor { traitCollection in
+                    traitCollection.userInterfaceStyle == .dark ? .white : .black
+                }), lineWidth: 2)
+                .padding(.horizontal, -4)
+        )
+        .foregroundColor(.primary)
+        .accentColor(.primary)
     }
 }
 
