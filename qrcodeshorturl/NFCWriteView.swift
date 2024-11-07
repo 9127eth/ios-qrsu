@@ -418,7 +418,8 @@ struct LinkInputView: View {
     }
     
     func writeURLToNFC() {
-        if let payload = NFCNDEFPayload.wellKnownTypeURIPayload(url: URL(string: url)!) {
+        let urlWithScheme = url.lowercased().hasPrefix("http://") || url.lowercased().hasPrefix("https://") ? url : "https://" + url
+        if let payload = NFCNDEFPayload.wellKnownTypeURIPayload(url: URL(string: urlWithScheme)!) {
             writeAction(payload)
         }
     }
